@@ -7,7 +7,7 @@ contract SimpleStorage2 {
     address public governance;
 
     modifier onlyGovernance() {
-        require(msg.sender == governance, "Only governance allowed");
+        require(msg.sender == governance, "SS2: Only governance allowed");
         _;
     }
 

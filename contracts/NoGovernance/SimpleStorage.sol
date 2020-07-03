@@ -11,7 +11,7 @@ contract SimpleStorage {
     address owner;
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "Only owner allowed");
+        require(msg.sender == owner, "SS1: Only owner allowed");
         _;
     }
 

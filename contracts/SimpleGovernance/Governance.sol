@@ -29,8 +29,8 @@ contract Governance {
         bytes memory _data,
         bytes[] memory _signatures
     ) external payable {
-        require(_nonce >= transactionsCount, "Nonce is already used");
-        require(_nonce == transactionsCount, "Nonce is too high");
+        require(_nonce >= transactionsCount, "Gov: Nonce is already used");
+        require(_nonce == transactionsCount, "Gov: Nonce is too high");
 
         bytes32 _digest = keccak256(abi.encodePacked(PREFIX, DOMAIN_SEPERATOR, _nonce, _to, _data));
 
@@ -51,11 +51,11 @@ contract Governance {
         for (uint256 i = 0; i < _signatures.length; i++) {
             address _signer = ECDSA.recover(_digest, _signatures[i]);
             uint160 _thisValidator = uint160(_signer);
-            require(_thisValidator > _lastValidator, "Invalid arrangement");
+            require(_thisValidator > _lastValidator, "Gov: Invalid arrangement");
             _lastValidator = _thisValidator;
-            require(isValidator(_signer), "Not a validator");
+            require(isValidator(_signer), "Gov: Not a validator");
         }
 
-        require(_signatures.length * 3 >= transactionsCount * 2, "Not 66% validators");
+        require(_signatures.length * 3 >= transactionsCount * 2, "Gov: Not 66% validators");
     }
 }
