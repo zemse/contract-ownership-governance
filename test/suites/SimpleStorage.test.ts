@@ -5,7 +5,7 @@
 /// @dev importing packages required
 import assert from 'assert';
 import { ethers } from 'ethers';
-import { SimpleStorageFactory } from '../../build/typechain/';
+import { SimpleStorageFactory } from '../../build/typechain/SimpleStorageFactory';
 import { SimpleStorage } from '../../build/typechain/SimpleStorage';
 
 /// @dev when you make this true, the parseTx helper will output transaction gas consumption and logs
