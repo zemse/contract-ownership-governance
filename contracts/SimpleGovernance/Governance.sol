@@ -56,6 +56,6 @@ contract Governance {
             require(isValidator(_signer), "Gov: Not a validator");
         }
 
-        require(_signatures.length * 3 >= transactionsCount * 2, "Gov: Not 66% validators");
+        require(_signatures.length * 3 > validatorCount * 2, "Gov: Not 66% validators");
     }
 }
