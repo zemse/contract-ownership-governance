@@ -112,6 +112,49 @@ export const SimpleGovernance = () =>
         assert.ok(msg.includes('Gov: Nonce is already used'), `Invalid error message: ${msg}`);
       }
     });
+
+    it('calls with 4/5 signatures success', async () => {
+      const data = storageInstance.interface.encodeFunctionData('setText', ['ilovemykeyboard']);
+
+      const nonce = await governanceInstance.transactionsCount();
+      const signatures = await prepareSignatures(nonce, storageInstance.address, data, {
+        sortSignatures: true,
+      });
+
+      await governanceInstance.makeGovernedCall(
+        nonce,
+        storageInstance.address,
+        data,
+        signatures.slice(0, 4)
+      );
+
+      const text = await storageInstance.getText();
+      assert.strictEqual(text, 'ilovemykeyboard', 'text should be set in the storage');
+    });
+
+    it('tries with 3/5 signatures expecting revert', async () => {
+      try {
+        const data = storageInstance.interface.encodeFunctionData('setText', ['ilovemychair']);
+
+        const nonce = await governanceInstance.transactionsCount();
+        const signatures = await prepareSignatures(nonce, storageInstance.address, data, {
+          sortSignatures: true,
+        });
+
+        await governanceInstance.makeGovernedCall(
+          nonce,
+          storageInstance.address,
+          data,
+          signatures.slice(0, 3)
+        );
+
+        assert(false, 'less signatures should have thrown error');
+      } catch (error) {
+        const msg = error.error?.message || error.message;
+
+        assert.ok(msg.includes('Gov: Not 66% validators'), `Invalid error message: ${msg}`);
+      }
+    });
   });
 
 async function prepareSignatures(
