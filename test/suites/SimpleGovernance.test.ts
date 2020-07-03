@@ -62,4 +62,13 @@ export const SimpleGovernance = () =>
         assert.ok(msg.includes('Only governance allowed'), `Invalid error message: ${msg}`);
       }
     });
+
+    it('calls setText though governance', async () => {
+      const data = storageInstance.interface.encodeFunctionData('setText', ['ilovemyplanet']);
+
+      await governanceInstance.makeGovernedCall(storageInstance.address, data);
+
+      const text = await storageInstance.getText();
+      assert.strictEqual(text, 'ilovemyplanet', 'text should be set in the storage');
+    });
   });
