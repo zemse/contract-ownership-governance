@@ -2,8 +2,7 @@ import assert from 'assert';
 import { ethers } from 'ethers';
 
 /// @dev initialising development blockchain
-const getProvider = () =>
-  new ethers.providers.JsonRpcProvider('http://localhost:7545');
+const getProvider = () => new ethers.providers.JsonRpcProvider('http://localhost:7545');
 
 /// @dev this is a test case collection
 export const Ganache = () =>
@@ -15,10 +14,7 @@ export const Ganache = () =>
             await global.provider.getNetwork();
             break;
           } catch (error) {
-            console.log(
-              '\x1b[2m%s\x1b[0m',
-              '      waiting for ganache to start...'
-            );
+            console.log('\x1b[2m%s\x1b[0m', '      waiting for ganache to start...');
             global.provider = getProvider();
           }
           await new Promise((res) => setTimeout(res, 1000));
@@ -33,9 +29,6 @@ export const Ganache = () =>
       global.accounts = await global.provider.listAccounts();
 
       /// @dev then we have our expection that accounts array should be at least having 1 accounts
-      assert.ok(
-        global.accounts.length >= 1,
-        'atleast 2 accounts should be present in the array'
-      );
+      assert.ok(global.accounts.length >= 1, 'atleast 2 accounts should be present in the array');
     });
   });

@@ -7,23 +7,23 @@
 pragma solidity ^0.6.10;
 
 contract SimpleStorage {
-  string text;
-  address owner;
+    string text;
+    address owner;
 
-  modifier onlyOwner() {
-    require(msg.sender == owner, 'Only owner allowed');
-    _;
-  }
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner allowed");
+        _;
+    }
 
-  constructor() public {
-    owner = msg.sender;
-  }
+    constructor() public {
+        owner = msg.sender;
+    }
 
-  function getText() public view returns (string memory) {
-    return text;
-  }
+    function getText() public view returns (string memory) {
+        return text;
+    }
 
-  function setText(string memory _value) public onlyOwner {
-    text = _value;
-  }
+    function setText(string memory _value) public onlyOwner {
+        text = _value;
+    }
 }
