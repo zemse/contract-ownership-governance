@@ -9,7 +9,10 @@
     "mocha": "mocha -t 30000 -r ts-node/register test/index.ts",
     "test": "npm run compile && npm run mocha",
     "test:debug": "DEBUG=true npm run test",
-    "deploy": "node deploy.js"
+    "deploy": "node deploy.js",
+    "style-check": "prettier --check test/ contracts/",
+    "typechain:run": "typechain --target ethers-v5 --outDir build/typechain 'build/artifacts/*.json'",
+    "typechain": "npm run typechain:run prettier --write build/typechain"
   },
   "dependencies": {
     "@types/fs-extra": "^9.0.1",
@@ -22,5 +25,11 @@
     "solc": "^0.6.8",
     "ts-node": "^8.10.1",
     "typescript": "^3.9.3"
+  },
+  "devDependencies": {
+    "@typechain/ethers-v5": "0.0.1",
+    "prettier": "^2.0.5",
+    "prettier-plugin-solidity": "^1.0.0-alpha.54",
+    "typechain": "^2.0.0"
   }
 }
