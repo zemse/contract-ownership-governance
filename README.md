@@ -1,6 +1,6 @@
-# Smart Contract Governance
+# Contract Ownership Governance
 
-This is a proposed standard implementation for decentralizing ownership of contracts.
+This is a proposed standard implementation for decentralizing ownership of smart contracts.
 
 ## Abstract
 
