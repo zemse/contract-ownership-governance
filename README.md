@@ -45,6 +45,8 @@ contract Governance {
 }
 ```
 
+The reference implementation is available at [`contracts/SimpleGovernance/Governance.sol`](https://github.com/zemse/smart-contract-governance/blob/master/contracts/SimpleGovernance/Governance.sol) in this repository.
+
 ## Rationale
 
 The goals of this effort have been the following:
@@ -68,7 +70,7 @@ Test cases include:
 
 ## Implementations
 
-This is a reference implementation. The relevant smart contract is available at: `contracts/SimpleGovernance/Governance.sol` in this repository.
+This is a reference implementation. The relevant smart contract is available at: [`contracts/SimpleGovernance/Governance.sol`](https://github.com/zemse/smart-contract-governance/blob/master/contracts/SimpleGovernance/Governance.sol) in this repository.
 
 1. Clone the repository
 2. `npm install`
