@@ -1,6 +1,6 @@
 # Smart Contract Governance
 
-This is a standard interface for decentralized ownership of contracts.
+This is a proposed standard implementation for decentralizing ownership of contracts.
 
 ## Abstract
 
