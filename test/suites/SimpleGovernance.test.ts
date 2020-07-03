@@ -63,12 +63,70 @@ export const SimpleGovernance = () =>
       }
     });
 
-    it('calls setText though governance', async () => {
+    it('tries to setText though governance with unsorted signatures expecting revert', async () => {
       const data = storageInstance.interface.encodeFunctionData('setText', ['ilovemyplanet']);
 
-      await governanceInstance.makeGovernedCall(storageInstance.address, data);
+      const nonce = await governanceInstance.transactionsCount();
+      const signatures = await prepareSignatures(nonce, storageInstance.address, data);
+
+      try {
+        await governanceInstance.makeGovernedCall(nonce, storageInstance.address, data, signatures);
+
+        assert(false, 'unsorted signatures should have thrown error');
+      } catch (error) {
+        const msg = error.error?.message || error.message;
+
+        assert.ok(msg.includes('Invalid arrangement'), `Invalid error message: ${msg}`);
+      }
+    });
+
+    it('executes setText though governance with sorted signatures', async () => {
+      const data = storageInstance.interface.encodeFunctionData('setText', ['ilovemyplanet']);
+
+      const nonce = await governanceInstance.transactionsCount();
+      const signatures = await prepareSignatures(nonce, storageInstance.address, data, {
+        sortSignatures: true,
+      });
+
+      await governanceInstance.makeGovernedCall(nonce, storageInstance.address, data, signatures);
 
       const text = await storageInstance.getText();
       assert.strictEqual(text, 'ilovemyplanet', 'text should be set in the storage');
     });
   });
+
+async function prepareSignatures(
+  nonce: ethers.BigNumber,
+  to: string,
+  data: string,
+  options?: { sortSignatures: boolean }
+): Promise<string[]> {
+  const PREFIX = await governanceInstance.PREFIX();
+  const DOMAIN_SEPERATOR = await governanceInstance.DOMAIN_SEPERATOR();
+
+  const digest = ethers.utils.keccak256(
+    ethers.utils.concat([
+      PREFIX,
+      DOMAIN_SEPERATOR,
+      ethers.utils.hexZeroPad(nonce.toHexString(), 32),
+      to,
+      data,
+    ])
+  );
+
+  let signatures = validatorWallets
+    .map((w) => {
+      return w._signingKey().signDigest(digest);
+    })
+    .map(ethers.utils.joinSignature);
+
+  if (options?.sortSignatures) {
+    signatures = signatures.sort((signatureA, signatureB) => {
+      const a = ethers.BigNumber.from(ethers.utils.recoverAddress(digest, signatureA));
+      const b = ethers.BigNumber.from(ethers.utils.recoverAddress(digest, signatureB));
+      return a.gt(b) ? 1 : -1;
+    });
+  }
+
+  return signatures;
+}
