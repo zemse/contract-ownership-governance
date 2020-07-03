@@ -155,6 +155,30 @@ export const SimpleGovernance = () =>
         assert.ok(msg.includes('Gov: Not 66% validators'), `Invalid error message: ${msg}`);
       }
     });
+
+    it('tries with duplicate signatures expecting revert', async () => {
+      try {
+        const data = storageInstance.interface.encodeFunctionData('setText', ['ilovemydesk']);
+
+        const nonce = await governanceInstance.transactionsCount();
+        const signatures = await prepareSignatures(nonce, storageInstance.address, data, {
+          sortSignatures: true,
+        });
+
+        await governanceInstance.makeGovernedCall(
+          nonce,
+          storageInstance.address,
+          data,
+          Array(5).fill(signatures[0])
+        );
+
+        assert(false, 'duplicate signatures should have thrown error');
+      } catch (error) {
+        const msg = error.error?.message || error.message;
+
+        assert.ok(msg.includes('Gov: Invalid arrangement'), `Invalid error message: ${msg}`);
+      }
+    });
   });
 
 async function prepareSignatures(
