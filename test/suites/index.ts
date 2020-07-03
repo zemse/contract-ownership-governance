@@ -1,2 +1,2 @@
 export * from './Ganache.test';
-export * from './SimpleStorage.test';
+export * from './NoGovernance.test';

@@ -15,8 +15,8 @@ const DEBUG_MODE = false;
 let simpleStorageInstance: SimpleStorage;
 
 /// @dev this is another test case collection
-export const SimpleStorageContract = () =>
-  describe('Simple Storage Contract', () => {
+export const NoGovernance = () =>
+  describe('No Governance', () => {
     it('deploys Simple Storage contract from first account', async () => {
       /// @dev you create a contract factory for deploying contract. Refer to ethers.js documentation at https://docs.ethers.io/ethers.js/html/
       const simpleStorageContractFactory = new SimpleStorageFactory(
