@@ -93,6 +93,25 @@ export const SimpleGovernance = () =>
       const text = await storageInstance.getText();
       assert.strictEqual(text, 'ilovemyplanet', 'text should be set in the storage');
     });
+
+    it('tries to replay the existing transaction expecting revert', async () => {
+      const data = storageInstance.interface.encodeFunctionData('setText', ['ilovemykeyboard']);
+
+      const nonce = ethers.BigNumber.from(0);
+      const signatures = await prepareSignatures(nonce, storageInstance.address, data, {
+        sortSignatures: true,
+      });
+
+      try {
+        await governanceInstance.makeGovernedCall(nonce, storageInstance.address, data, signatures);
+
+        assert(false, 'should have thrown error');
+      } catch (error) {
+        const msg = error.error?.message || error.message;
+
+        assert.ok(msg.includes('Gov: Nonce is already used'), `Invalid error message: ${msg}`);
+      }
+    });
   });
 
 async function prepareSignatures(
