@@ -5,66 +5,54 @@
 /// @dev importing packages required
 import assert from 'assert';
 import { ethers } from 'ethers';
+import { SimpleStorageFactory } from '../../build/typechain/';
+import { SimpleStorage } from '../../build/typechain/SimpleStorage';
 
 /// @dev when you make this true, the parseTx helper will output transaction gas consumption and logs
 const DEBUG_MODE = false;
 
-/// @dev importing build file
-const simpleStorageJSON = require('../../build/SimpleStorage_SimpleStorage.json');
-
 /// @dev initialize file level global variables, you can also register it global.ts if needed across files.
-let simpleStorageInstance: ethers.Contract;
+let simpleStorageInstance: SimpleStorage;
 
 /// @dev this is another test case collection
 export const SimpleStorageContract = () =>
   describe('Simple Storage Contract', () => {
-    /// @dev describe under another describe is a sub test case collection
-    describe('Simple Storage Setup', async () => {
-      /// @dev this is first test case of this collection
-      it('deploys Simple Storage contract from first account with initial storage: Hello World', async () => {
-        /// @dev you create a contract factory for deploying contract. Refer to ethers.js documentation at https://docs.ethers.io/ethers.js/html/
-        const SimpleStorageContractFactory = new ethers.ContractFactory(
-          simpleStorageJSON.abi,
-          simpleStorageJSON.evm.bytecode.object,
-          global.provider.getSigner(global.accounts[0])
-        );
-        simpleStorageInstance = await SimpleStorageContractFactory.deploy(
-          'hello world'
-        );
+    it('deploys Simple Storage contract from first account', async () => {
+      /// @dev you create a contract factory for deploying contract. Refer to ethers.js documentation at https://docs.ethers.io/ethers.js/html/
+      const simpleStorageContractFactory = new SimpleStorageFactory(
+        global.provider.getSigner(global.accounts[0])
+      );
+      simpleStorageInstance = await simpleStorageContractFactory.deploy();
 
-        assert.ok(
-          simpleStorageInstance.address,
-          'conract address should be present'
-        );
-      });
-
-      /// @dev this is second test case of this collection
-      it('value should be set properly while deploying', async () => {
-        /// @dev you access the value at storage with ethers.js library of our custom contract method called getValue defined in contracts/SimpleStorage.sol
-        const currentValue = await simpleStorageInstance.functions.getValue();
-
-        /// @dev then you compare it with your expectation value
-        assert.equal(
-          currentValue,
-          'hello world',
-          'value set while deploying must be visible when get'
-        );
-      });
+      assert.ok(simpleStorageInstance.address, 'conract address should be present');
     });
 
-    describe('Simple Storage Functionality', async () => {
-      /// @dev this is first test case of this collection
-      it('should change storage value to a new value', async () => {
-        /// @dev you sign and submit a transaction to local blockchain (ganache) initialized on line 10.
-        ///   you can use the parseTx wrapper to parse tx and output gas consumption and logs.
-        ///   use parseTx with non constant methods
-        const receipt = await simpleStorageInstance.functions.setValue('hi');
+    it('changes storage text to a new text from first account', async () => {
+      /// @dev you sign and submit a transaction to local blockchain (ganache) initialized on line 10.
+      ///   you can use the parseTx wrapper to parse tx and output gas consumption and logs.
+      ///   use parseTx with non constant methods
+      await simpleStorageInstance.functions.setText('hi');
 
-        /// @dev now get the value at storage
-        const currentValue = await simpleStorageInstance.functions.getValue();
+      /// @dev now get the text at storage
+      const currentText = await simpleStorageInstance.functions.getText();
 
-        /// @dev then comparing with expectation value
-        assert.equal(currentValue, 'hi', 'value set must be able to get');
-      });
+      /// @dev then comparing with expectation text
+      assert.equal(currentText, 'hi', 'text set must be able to get');
+    });
+
+    it('tries to change storage text using second account expecting revert', async () => {
+      const _simpleStorageInstance = simpleStorageInstance.connect(
+        global.provider.getSigner(global.accounts[1])
+      );
+
+      try {
+        await _simpleStorageInstance.functions.setText('hi');
+
+        assert(false, 'should have thrown error');
+      } catch (error) {
+        const msg = error.error?.message || error.message;
+
+        assert.ok(msg.includes('Only owner allowed'), `Invalid error message: ${msg}`);
+      }
     });
   });

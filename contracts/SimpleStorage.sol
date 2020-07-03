@@ -4,23 +4,26 @@
 
 // Place your solidity files in this contracts folder and run the compile.js file using node compile.js file in project directory to compile your contracts.
 
-pragma solidity ^0.6.3;
+pragma solidity ^0.6.10;
 
 contract SimpleStorage {
-  string value;
+  string text;
+  address owner;
 
-  event ValueChanged(address indexed author, string oldValue, string newValue);
-
-  constructor(string memory _value) public {
-    setValue(_value);
+  modifier onlyOwner() {
+    require(msg.sender == owner, 'Only owner allowed');
+    _;
   }
 
-  function getValue() public view returns (string memory) {
-    return value;
+  constructor() public {
+    owner = msg.sender;
   }
 
-  function setValue(string memory _value) public {
-    emit ValueChanged(msg.sender, value, _value);
-    value = _value;
+  function getText() public view returns (string memory) {
+    return text;
+  }
+
+  function setText(string memory _value) public onlyOwner {
+    text = _value;
   }
 }
