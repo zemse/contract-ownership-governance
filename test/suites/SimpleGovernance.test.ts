@@ -59,7 +59,7 @@ export const SimpleGovernance = () =>
       } catch (error) {
         const msg = error.error?.message || error.message;
 
-        assert.ok(msg.includes('Only governance allowed'), `Invalid error message: ${msg}`);
+        assert.ok(msg.includes('SS2: Only governance allowed'), `Invalid error message: ${msg}`);
       }
     });
 
@@ -76,7 +76,7 @@ export const SimpleGovernance = () =>
       } catch (error) {
         const msg = error.error?.message || error.message;
 
-        assert.ok(msg.includes('Invalid arrangement'), `Invalid error message: ${msg}`);
+        assert.ok(msg.includes('Gov: Invalid arrangement'), `Invalid error message: ${msg}`);
       }
     });
 
