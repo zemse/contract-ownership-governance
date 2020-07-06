@@ -26,13 +26,13 @@ A similar concept of multisig wallets have already been used so that funds canno
 
 ## Specification
 
-A `dApp` smart contract considers address of another smart contract called `Governance` as it's owner (instead of a wallet address).
+A `dApp` smart contract considers address of another smart contract called `GovernanceOffchain` as it's owner (instead of a wallet address).
 
 ```solidity
 contract Governance {
-  function makeGovernedCall(
+  function executeTransaction(
     uint256 _nonce,
-    address _to,
+    address _destination,
     bytes memory _data,
     bytes[] memory _signatures
   ) external payable {
@@ -45,7 +45,7 @@ contract Governance {
 }
 ```
 
-The reference implementation is available at [`contracts/SimpleGovernance/Governance.sol`](https://github.com/zemse/smart-contract-governance/blob/master/contracts/SimpleGovernance/Governance.sol) in this repository.
+The reference implementation is available at [`contracts/GovernanceOffchain.sol`](https://github.com/zemse/smart-contract-governance/blob/master/contracts/GovernanceOffchain.sol) in this repository.
 
 ## Rationale
 
@@ -70,7 +70,7 @@ Test cases include:
 
 ## Implementations
 
-This is a reference implementation. The relevant smart contract is available at: [`contracts/SimpleGovernance/Governance.sol`](https://github.com/zemse/smart-contract-governance/blob/master/contracts/SimpleGovernance/Governance.sol) in this repository.
+This is a reference implementation. The relevant smart contract is available at: [`contracts/GovernanceOffchain.sol`](https://github.com/zemse/smart-contract-governance/blob/master/contracts/GovernanceOffchain.sol) in this repository.
 
 1. Clone the repository
 2. `npm install`
