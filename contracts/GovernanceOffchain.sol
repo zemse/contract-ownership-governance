@@ -34,7 +34,7 @@ contract Governance {
     /// @param _to address of contract to make a call to, should be dApp address
     /// @param _data input data in the transaction
     /// @param _signatures sorted sigs according to increasing signer addresses
-    function makeGovernedCall(
+    function executeTransaction(
         uint256 _nonce,
         address _to,
         bytes memory _data,

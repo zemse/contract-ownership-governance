@@ -81,7 +81,12 @@ export const SimpleGovernance = () =>
       const signatures = await prepareSignatures(nonce, storageInstance.address, data);
 
       try {
-        await governanceInstance.makeGovernedCall(nonce, storageInstance.address, data, signatures);
+        await governanceInstance.executeTransaction(
+          nonce,
+          storageInstance.address,
+          data,
+          signatures
+        );
 
         assert(false, 'unsorted signatures should have thrown error');
       } catch (error) {
@@ -99,7 +104,7 @@ export const SimpleGovernance = () =>
         sortSignatures: true,
       });
 
-      await governanceInstance.makeGovernedCall(nonce, storageInstance.address, data, signatures);
+      await governanceInstance.executeTransaction(nonce, storageInstance.address, data, signatures);
 
       const text = await storageInstance.getText();
       assert.strictEqual(text, 'ilovemyplanet', 'text should be set in the storage');
@@ -114,7 +119,12 @@ export const SimpleGovernance = () =>
       });
 
       try {
-        await governanceInstance.makeGovernedCall(nonce, storageInstance.address, data, signatures);
+        await governanceInstance.executeTransaction(
+          nonce,
+          storageInstance.address,
+          data,
+          signatures
+        );
 
         assert(false, 'should have thrown error');
       } catch (error) {
@@ -132,7 +142,7 @@ export const SimpleGovernance = () =>
         sortSignatures: true,
       });
 
-      await governanceInstance.makeGovernedCall(
+      await governanceInstance.executeTransaction(
         nonce,
         storageInstance.address,
         data,
@@ -152,7 +162,7 @@ export const SimpleGovernance = () =>
           sortSignatures: true,
         });
 
-        await governanceInstance.makeGovernedCall(
+        await governanceInstance.executeTransaction(
           nonce,
           storageInstance.address,
           data,
@@ -176,7 +186,7 @@ export const SimpleGovernance = () =>
           sortSignatures: true,
         });
 
-        await governanceInstance.makeGovernedCall(
+        await governanceInstance.executeTransaction(
           nonce,
           storageInstance.address,
           data,
