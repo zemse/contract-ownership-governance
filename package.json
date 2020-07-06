@@ -11,7 +11,7 @@
     "test:debug": "DEBUG=true npm run test",
     "deploy": "node deploy.js",
     "style-check": "prettier --check test/ contracts/",
-    "typechain:run": "typechain --target ethers-v5 --outDir build/typechain 'build/artifacts/*/*.json'",
+    "typechain:run": "typechain --target ethers-v5 --outDir build/typechain 'build/artifacts/**.json'",
     "typechain": "npm run typechain:run prettier --write build/typechain"
   },
   "dependencies": {
