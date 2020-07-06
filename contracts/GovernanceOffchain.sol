@@ -31,25 +31,27 @@ contract Governance {
 
     /// @notice Calls the dApp to perform administrative task
     /// @param _nonce serial number of transaction
-    /// @param _to address of contract to make a call to, should be dApp address
+    /// @param _destination address of contract to make a call to, should be dApp address
     /// @param _data input data in the transaction
     /// @param _signatures sorted sigs according to increasing signer addresses
     function executeTransaction(
         uint256 _nonce,
-        address _to,
+        address _destination,
         bytes memory _data,
         bytes[] memory _signatures
     ) external payable {
         require(_nonce >= transactionsCount, "Gov: Nonce is already used");
         require(_nonce == transactionsCount, "Gov: Nonce is too high");
 
-        bytes32 _digest = keccak256(abi.encodePacked(PREFIX, DOMAIN_SEPERATOR, _nonce, _to, _data));
+        bytes32 _digest = keccak256(
+            abi.encodePacked(PREFIX, DOMAIN_SEPERATOR, _nonce, _destination, _data)
+        );
 
         verifySignatures(_digest, _signatures);
 
         transactionsCount++;
 
-        (bool _success, ) = _to.call{ value: msg.value }(_data);
+        (bool _success, ) = _destination.call{ value: msg.value }(_data);
         require(_success, "Call was reverted");
     }
 
