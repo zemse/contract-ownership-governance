@@ -55,6 +55,30 @@ contract Governance {
         require(_success, "Call was reverted");
     }
 
+    /// @notice Updates validator statuses
+    /// @param _validators List of addresses to update validator status
+    /// @param _newStatus List of corresponding new status of addresses
+    function updateValidators(address[] memory _validators, bool[] memory _newStatus) external {
+        require(msg.sender == address(this), "Gov: Only self can call");
+        require(_validators.length == _newStatus.length, "Gov: Invalid input lengths");
+
+        uint256 _validatorCount = validatorCount;
+
+        for (uint256 i = 0; i < _validators.length; i++) {
+            if (_newStatus[i] != validators[_validators[i]]) {
+                if (_newStatus[i]) {
+                    _validatorCount++;
+                } else {
+                    _validatorCount--;
+                }
+
+                validators[_validators[i]] = _newStatus[i];
+            }
+        }
+
+        validatorCount = _validatorCount;
+    }
+
     function isValidator(address _validator) public view returns (bool) {
         return validators[_validator];
     }

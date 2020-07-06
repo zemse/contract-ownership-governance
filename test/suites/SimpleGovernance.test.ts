@@ -7,7 +7,7 @@ import { GovernanceOffchain } from '../../build/typechain/GovernanceOffchain';
 let governanceInstance: GovernanceOffchain;
 let storageInstance: SimpleStorage;
 
-const validatorWallets: ethers.Wallet[] = [
+let validatorWallets: ethers.Wallet[] = [
   new ethers.Wallet('0x' + '1'.repeat(64)),
   new ethers.Wallet('0x' + '2'.repeat(64)),
   new ethers.Wallet('0x' + '3'.repeat(64)),
@@ -199,6 +199,92 @@ export const SimpleGovernance = () =>
 
         assert.ok(msg.includes('Gov: Invalid arrangement'), `Invalid error message: ${msg}`);
       }
+    });
+
+    it('updates validators removing a validator', async () => {
+      const data = governanceInstance.interface.encodeFunctionData('updateValidators', [
+        [validatorWallets[0].address],
+        [false],
+      ]);
+
+      const nonce = await governanceInstance.transactionsCount();
+      const signatures = await prepareSignatures(nonce, governanceInstance.address, data, {
+        sortSignatures: true,
+      });
+
+      const validatorStatusBefore = await governanceInstance.isValidator(
+        validatorWallets[0].address
+      );
+      const validatorCountBefore = await governanceInstance.validatorCount();
+      assert.strictEqual(validatorStatusBefore, true, 'should be a validator initially');
+      assert.deepEqual(validatorCountBefore.toNumber(), 5, 'intially there should be 5 validators');
+
+      await governanceInstance.executeTransaction(
+        nonce,
+        governanceInstance.address,
+        data,
+        signatures
+      );
+
+      const validatorStatusAfter = await governanceInstance.isValidator(
+        validatorWallets[0].address
+      );
+      const validatorCountAfter = await governanceInstance.validatorCount();
+      assert.strictEqual(validatorStatusAfter, false, 'validator status should be revoked');
+      assert.deepEqual(
+        validatorCountAfter.toNumber(),
+        4,
+        'validator count should be decreased by 1'
+      );
+
+      // removing element from validatorWallets
+      validatorWallets = validatorWallets.slice(1);
+    });
+
+    it('updates validators by adding and removing at same time', async () => {
+      const newValidator = ethers.Wallet.createRandom();
+      const data = governanceInstance.interface.encodeFunctionData('updateValidators', [
+        [validatorWallets[0].address, newValidator.address],
+        [false, true],
+      ]);
+
+      const nonce = await governanceInstance.transactionsCount();
+      const signatures = await prepareSignatures(nonce, governanceInstance.address, data, {
+        sortSignatures: true,
+      });
+
+      const existingValidatorStatusBefore = await governanceInstance.isValidator(
+        validatorWallets[0].address
+      );
+      const newValidatorStatusBefore = await governanceInstance.isValidator(newValidator.address);
+      const validatorCountBefore = await governanceInstance.validatorCount();
+
+      assert.strictEqual(existingValidatorStatusBefore, true, 'should be a validator initially');
+      assert.strictEqual(newValidatorStatusBefore, false, 'should not be a validator initially');
+      assert.deepEqual(validatorCountBefore.toNumber(), 4, 'intially there should be 4 validators');
+
+      const tx = await governanceInstance.executeTransaction(
+        nonce,
+        governanceInstance.address,
+        data,
+        signatures
+      );
+      const r = await tx.wait();
+      console.log(r.gasUsed.toNumber());
+
+      const existingValidatorStatusAfter = await governanceInstance.isValidator(
+        validatorWallets[0].address
+      );
+      const newValidatorStatusAfter = await governanceInstance.isValidator(newValidator.address);
+      const validatorCountAfter = await governanceInstance.validatorCount();
+
+      assert.strictEqual(existingValidatorStatusAfter, false, 'validator status should be revoked');
+      assert.strictEqual(newValidatorStatusAfter, true, 'validator status should be given');
+      assert.deepEqual(validatorCountAfter.toNumber(), 4, 'validator count should be same');
+
+      // removing element from validatorWallets
+      validatorWallets = validatorWallets.slice(1);
+      validatorWallets.push(newValidator);
     });
   });
 
