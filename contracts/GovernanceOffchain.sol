@@ -5,9 +5,9 @@ pragma experimental ABIEncoderV2;
 
 import "./lib/ECDSA.sol";
 
-/// @title Governance Smart Contract
+/// @title Governance Offchain Smart Contract
 /// @notice Works as the owner of a decentralised application to perform administrative tasks.
-contract Governance {
+contract GovernanceOffChain {
     /// @dev EIP-191 Prepend byte + Version byte
     bytes public constant PREFIX = hex"1966";
     /// @dev Keeps signed data scoped only for this governance contract
@@ -33,7 +33,7 @@ contract Governance {
     /// @param _nonce serial number of transaction
     /// @param _destination address of contract to make a call to, should be dApp address
     /// @param _data input data in the transaction
-    /// @param _signatures sorted sigs according to increasing signer addresses
+    /// @param _signatures sorted sigs according to increasing signer addresses (required to be collect off chain)
     function executeTransaction(
         uint256 _nonce,
         address _destination,
