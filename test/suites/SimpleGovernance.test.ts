@@ -1,11 +1,11 @@
 import assert from 'assert';
 import { ethers } from 'ethers';
-import { GovernanceFactory, GovernedStorageFactory } from '../../build/typechain/';
-import { GovernedStorage } from '../../build/typechain/GovernedStorage';
-import { Governance } from '../../build/typechain/Governance';
+import { SimpleStorageFactory, GovernanceOffchainFactory } from '../../build/typechain/';
+import { SimpleStorage } from '../../build/typechain/SimpleStorage';
+import { GovernanceOffchain } from '../../build/typechain/GovernanceOffchain';
 
-let governanceInstance: Governance;
-let storageInstance: GovernedStorage;
+let governanceInstance: GovernanceOffchain;
+let storageInstance: SimpleStorage;
 
 const validatorWallets: ethers.Wallet[] = [
   new ethers.Wallet('0x' + '1'.repeat(64)),
@@ -18,7 +18,7 @@ const validatorWallets: ethers.Wallet[] = [
 export const SimpleGovernance = () =>
   describe('Simple Governance', () => {
     it('deploys governance contract with initial validators', async () => {
-      const governanceFactory = new GovernanceFactory(global.provider.getSigner(0));
+      const governanceFactory = new GovernanceOffchainFactory(global.provider.getSigner(0));
 
       const validatorAddresses = validatorWallets.map((vw) => vw.address);
       governanceInstance = await governanceFactory.deploy(validatorAddresses);
@@ -38,16 +38,27 @@ export const SimpleGovernance = () =>
       );
     });
 
-    it('deploys storage contract with governance address as constructor arg', async () => {
-      const storageFactory = new GovernedStorageFactory(global.provider.getSigner(0));
+    it('deploys simple storage contract', async () => {
+      const storageFactory = new SimpleStorageFactory(global.provider.getSigner(0));
 
-      storageInstance = await storageFactory.deploy(governanceInstance.address);
+      storageInstance = await storageFactory.deploy();
 
-      const governanceAddress = await storageInstance.governance();
+      const currentOwner = await storageInstance.owner();
       assert.strictEqual(
-        governanceAddress,
-        governanceInstance.address,
+        currentOwner,
+        global.accounts[0],
         'governance contract address should be set'
+      );
+    });
+
+    it('transfers ownership of simple storage contract to governance contract', async () => {
+      await storageInstance.transferOwnership(governanceInstance.address);
+
+      const currentOwner = await storageInstance.owner();
+      assert.strictEqual(
+        currentOwner,
+        governanceInstance.address,
+        'governance should be next owner'
       );
     });
 
@@ -59,7 +70,7 @@ export const SimpleGovernance = () =>
       } catch (error) {
         const msg = error.error?.message || error.message;
 
-        assert.ok(msg.includes('SS2: Only governance allowed'), `Invalid error message: ${msg}`);
+        assert.ok(msg.includes('SS: Only owner allowed'), `Invalid error message: ${msg}`);
       }
     });
 

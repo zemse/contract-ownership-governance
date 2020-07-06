@@ -3,7 +3,7 @@
 pragma solidity ^0.6.10;
 pragma experimental ABIEncoderV2;
 
-import "../lib/ECDSA.sol";
+import "./lib/ECDSA.sol";
 
 /// @title Governance Smart Contract
 /// @notice Works as the owner of a decentralised application to perform administrative tasks.
