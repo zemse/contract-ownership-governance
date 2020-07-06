@@ -7,7 +7,7 @@ import { GovernanceOffchain } from '../../build/typechain/GovernanceOffchain';
 let governanceInstance: GovernanceOffchain;
 let storageInstance: SimpleStorage;
 
-let validatorWallets: ethers.Wallet[] = [
+let ownersWallets: ethers.Wallet[] = [
   new ethers.Wallet('0x' + '1'.repeat(64)),
   new ethers.Wallet('0x' + '2'.repeat(64)),
   new ethers.Wallet('0x' + '3'.repeat(64)),
@@ -17,24 +17,21 @@ let validatorWallets: ethers.Wallet[] = [
 
 export const SimpleGovernance = () =>
   describe('Simple Governance', () => {
-    it('deploys governance contract with initial validators', async () => {
+    it('deploys governance contract with initial owners', async () => {
       const governanceFactory = new GovernanceOffchainFactory(global.provider.getSigner(0));
 
-      const validatorAddresses = validatorWallets.map((vw) => vw.address);
-      governanceInstance = await governanceFactory.deploy(validatorAddresses);
+      const ownerAddresses = ownersWallets.map((vw) => vw.address);
+      governanceInstance = await governanceFactory.deploy(ownerAddresses);
 
-      for (const validatorAddress of validatorAddresses) {
-        assert.ok(
-          await governanceInstance.isValidator(validatorAddress),
-          'should have become validator'
-        );
+      for (const ownerAddress of ownerAddresses) {
+        assert.ok(await governanceInstance.isValidator(ownerAddress), 'should have become owner');
       }
 
-      const validatorCount = await governanceInstance.validatorCount();
+      const ownersCount = await governanceInstance.ownersCount();
       assert.strictEqual(
-        validatorCount.toNumber(),
-        validatorAddresses.length,
-        'validator count should be correct'
+        ownersCount.toNumber(),
+        ownerAddresses.length,
+        'owner count should be correct'
       );
     });
 
@@ -173,7 +170,7 @@ export const SimpleGovernance = () =>
       } catch (error) {
         const msg = error.error?.message || error.message;
 
-        assert.ok(msg.includes('Gov: Not 66% validators'), `Invalid error message: ${msg}`);
+        assert.ok(msg.includes('Gov: Not 66% owners'), `Invalid error message: ${msg}`);
       }
     });
 
@@ -201,9 +198,9 @@ export const SimpleGovernance = () =>
       }
     });
 
-    it('updates validators removing a validator', async () => {
+    it('updates owners removing a owner', async () => {
       const data = governanceInstance.interface.encodeFunctionData('updateValidators', [
-        [validatorWallets[0].address],
+        [ownersWallets[0].address],
         [false],
       ]);
 
@@ -212,12 +209,10 @@ export const SimpleGovernance = () =>
         sortSignatures: true,
       });
 
-      const validatorStatusBefore = await governanceInstance.isValidator(
-        validatorWallets[0].address
-      );
-      const validatorCountBefore = await governanceInstance.validatorCount();
-      assert.strictEqual(validatorStatusBefore, true, 'should be a validator initially');
-      assert.deepEqual(validatorCountBefore.toNumber(), 5, 'intially there should be 5 validators');
+      const ownerStatusBefore = await governanceInstance.isValidator(ownersWallets[0].address);
+      const ownersCountBefore = await governanceInstance.ownersCount();
+      assert.strictEqual(ownerStatusBefore, true, 'should be a owner initially');
+      assert.deepEqual(ownersCountBefore.toNumber(), 5, 'intially there should be 5 owners');
 
       await governanceInstance.executeTransaction(
         nonce,
@@ -226,25 +221,19 @@ export const SimpleGovernance = () =>
         signatures
       );
 
-      const validatorStatusAfter = await governanceInstance.isValidator(
-        validatorWallets[0].address
-      );
-      const validatorCountAfter = await governanceInstance.validatorCount();
-      assert.strictEqual(validatorStatusAfter, false, 'validator status should be revoked');
-      assert.deepEqual(
-        validatorCountAfter.toNumber(),
-        4,
-        'validator count should be decreased by 1'
-      );
+      const ownerStatusAfter = await governanceInstance.isValidator(ownersWallets[0].address);
+      const ownersCountAfter = await governanceInstance.ownersCount();
+      assert.strictEqual(ownerStatusAfter, false, 'owner status should be revoked');
+      assert.deepEqual(ownersCountAfter.toNumber(), 4, 'owner count should be decreased by 1');
 
-      // removing element from validatorWallets
-      validatorWallets = validatorWallets.slice(1);
+      // removing element from ownersWallets
+      ownersWallets = ownersWallets.slice(1);
     });
 
-    it('updates validators by adding and removing at same time', async () => {
+    it('updates owners by adding and removing at same time', async () => {
       const newValidator = ethers.Wallet.createRandom();
       const data = governanceInstance.interface.encodeFunctionData('updateValidators', [
-        [validatorWallets[0].address, newValidator.address],
+        [ownersWallets[0].address, newValidator.address],
         [false, true],
       ]);
 
@@ -254,14 +243,14 @@ export const SimpleGovernance = () =>
       });
 
       const existingValidatorStatusBefore = await governanceInstance.isValidator(
-        validatorWallets[0].address
+        ownersWallets[0].address
       );
       const newValidatorStatusBefore = await governanceInstance.isValidator(newValidator.address);
-      const validatorCountBefore = await governanceInstance.validatorCount();
+      const ownersCountBefore = await governanceInstance.ownersCount();
 
-      assert.strictEqual(existingValidatorStatusBefore, true, 'should be a validator initially');
-      assert.strictEqual(newValidatorStatusBefore, false, 'should not be a validator initially');
-      assert.deepEqual(validatorCountBefore.toNumber(), 4, 'intially there should be 4 validators');
+      assert.strictEqual(existingValidatorStatusBefore, true, 'should be a owner initially');
+      assert.strictEqual(newValidatorStatusBefore, false, 'should not be a owner initially');
+      assert.deepEqual(ownersCountBefore.toNumber(), 4, 'intially there should be 4 owners');
 
       const tx = await governanceInstance.executeTransaction(
         nonce,
@@ -273,18 +262,18 @@ export const SimpleGovernance = () =>
       console.log(r.gasUsed.toNumber());
 
       const existingValidatorStatusAfter = await governanceInstance.isValidator(
-        validatorWallets[0].address
+        ownersWallets[0].address
       );
       const newValidatorStatusAfter = await governanceInstance.isValidator(newValidator.address);
-      const validatorCountAfter = await governanceInstance.validatorCount();
+      const ownersCountAfter = await governanceInstance.ownersCount();
 
-      assert.strictEqual(existingValidatorStatusAfter, false, 'validator status should be revoked');
-      assert.strictEqual(newValidatorStatusAfter, true, 'validator status should be given');
-      assert.deepEqual(validatorCountAfter.toNumber(), 4, 'validator count should be same');
+      assert.strictEqual(existingValidatorStatusAfter, false, 'owner status should be revoked');
+      assert.strictEqual(newValidatorStatusAfter, true, 'owner status should be given');
+      assert.deepEqual(ownersCountAfter.toNumber(), 4, 'owner count should be same');
 
-      // removing element from validatorWallets
-      validatorWallets = validatorWallets.slice(1);
-      validatorWallets.push(newValidator);
+      // removing element from ownersWallets
+      ownersWallets = ownersWallets.slice(1);
+      ownersWallets.push(newValidator);
     });
   });
 
@@ -307,7 +296,7 @@ async function prepareSignatures(
     ])
   );
 
-  let signatures = validatorWallets
+  let signatures = ownersWallets
     .map((w) => {
       return w._signingKey().signDigest(digest);
     })

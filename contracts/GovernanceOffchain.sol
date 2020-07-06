@@ -17,16 +17,16 @@ contract GovernanceOffChain {
     uint256 public transactionsCount;
 
     /// @dev These are addresses to whom the administration is decentralized
-    uint256 public validatorCount;
-    mapping(address => bool) validators;
+    uint256 public ownersCount;
+    mapping(address => bool) owners;
 
-    /// @param _validators used to set the initial validators
-    constructor(address[] memory _validators) public {
-        for (uint256 i = 0; i < _validators.length; i++) {
-            validators[_validators[i]] = true;
+    /// @param _owners used to set the initial owners
+    constructor(address[] memory _owners) public {
+        for (uint256 i = 0; i < _owners.length; i++) {
+            owners[_owners[i]] = true;
         }
 
-        validatorCount = _validators.length;
+        ownersCount = _owners.length;
     }
 
     /// @notice Calls the dApp to perform administrative task
@@ -55,32 +55,32 @@ contract GovernanceOffChain {
         require(_success, "Call was reverted");
     }
 
-    /// @notice Updates validator statuses
-    /// @param _validators List of addresses to update validator status
+    /// @notice Updates owner statuses
+    /// @param _owners List of addresses to update owner status
     /// @param _newStatus List of corresponding new status of addresses
-    function updateValidators(address[] memory _validators, bool[] memory _newStatus) external {
+    function updateValidators(address[] memory _owners, bool[] memory _newStatus) external {
         require(msg.sender == address(this), "Gov: Only self can call");
-        require(_validators.length == _newStatus.length, "Gov: Invalid input lengths");
+        require(_owners.length == _newStatus.length, "Gov: Invalid input lengths");
 
-        uint256 _validatorCount = validatorCount;
+        uint256 _ownersCount = ownersCount;
 
-        for (uint256 i = 0; i < _validators.length; i++) {
-            if (_newStatus[i] != validators[_validators[i]]) {
+        for (uint256 i = 0; i < _owners.length; i++) {
+            if (_newStatus[i] != owners[_owners[i]]) {
                 if (_newStatus[i]) {
-                    _validatorCount++;
+                    _ownersCount++;
                 } else {
-                    _validatorCount--;
+                    _ownersCount--;
                 }
 
-                validators[_validators[i]] = _newStatus[i];
+                owners[_owners[i]] = _newStatus[i];
             }
         }
 
-        validatorCount = _validatorCount;
+        ownersCount = _ownersCount;
     }
 
-    function isValidator(address _validator) public view returns (bool) {
-        return validators[_validator];
+    function isValidator(address _owner) public view returns (bool) {
+        return owners[_owner];
     }
 
     /// @notice Checks for consensus
@@ -96,10 +96,10 @@ contract GovernanceOffChain {
             require(_thisValidator > _lastValidator, "Gov: Invalid arrangement");
             _lastValidator = _thisValidator;
 
-            require(isValidator(_signer), "Gov: Not a validator");
+            require(isValidator(_signer), "Gov: Not a owner");
         }
 
         // 66% consensus
-        require(_signatures.length * 3 > validatorCount * 2, "Gov: Not 66% validators");
+        require(_signatures.length * 3 > ownersCount * 2, "Gov: Not 66% owners");
     }
 }
