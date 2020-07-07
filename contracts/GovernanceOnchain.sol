@@ -2,7 +2,9 @@
 
 pragma solidity ^0.6.10;
 
-contract GovernanceOnchain {
+import "./IGovernanceOnchain.sol";
+
+contract Governance is GovernanceOnchain {
     struct Transaction {
         address destination;
         uint256 value;
@@ -13,13 +15,13 @@ contract GovernanceOnchain {
     }
 
     /// @dev Transactions proposed for being executed
-    Transaction[] public transactions;
+    Transaction[] public override transactions;
 
     /// @dev Sum of the privileges of all governors
-    uint256 public totalPrivileges;
+    uint256 public override totalPrivileges;
 
     /// @dev Governor addresses with corresponding privileges (vote weightage)
-    mapping(address => uint256) public privileges;
+    mapping(address => uint256) privileges;
 
     /// @dev This emits when governors privilege changes
     event GovernorsPrivilegeUpdated(address[] governors, uint256[] privileges);
@@ -69,7 +71,7 @@ contract GovernanceOnchain {
 
     /// @dev Allows a governor to confirm a transaction.
     /// @param _transactionId Transaction ID.
-    function confirmTransaction(uint256 _transactionId) public {
+    function confirmTransaction(uint256 _transactionId) public override {
         require(privileges[msg.sender] > 0, "Gov: Only governors can call");
         require(_transactionId < transactions.length, "Gov: Tx doesnt exists");
         require(!transactions[_transactionId].executed, "Gov: Tx already executed");
@@ -79,7 +81,7 @@ contract GovernanceOnchain {
 
     /// @dev Allows a governor to revoke a confirmation for a transaction.
     /// @param _transactionId Transaction ID.
-    function revokeConfirmation(uint256 _transactionId) public {
+    function revokeConfirmation(uint256 _transactionId) public override {
         require(privileges[msg.sender] > 0, "Gov: Only governors can call");
         require(_transactionId < transactions.length, "Gov: Tx doesnt exists");
         require(!transactions[_transactionId].executed, "Gov: Tx already executed");
@@ -87,7 +89,7 @@ contract GovernanceOnchain {
         transactions[_transactionId].confirmation[msg.sender] = false;
     }
 
-    function executeTransaction(uint256 _transactionId) public {
+    function executeTransaction(uint256 _transactionId) public override {
         require(isTransactionConfirmed(_transactionId), "Gov: Consensus not acheived");
 
         (bool _success, ) = transactions[_transactionId].destination.call{
@@ -106,6 +108,7 @@ contract GovernanceOnchain {
     /// @param _newPrivileges List of corresponding new privileges
     function updatePrivileges(address[] memory _governors, uint256[] memory _newPrivileges)
         external
+        override
     {
         require(msg.sender == address(this), "Gov: Only self can call");
         require(_governors.length == _newPrivileges.length, "Gov: Invalid input lengths");
@@ -124,5 +127,12 @@ contract GovernanceOnchain {
         totalPrivileges = _totalPrivileges;
 
         emit GovernorsPrivilegeUpdated(_governors, _newPrivileges);
+    }
+
+    /// @notice Gets the consensus privilege of the governor
+    /// @param _governor Address of the governor
+    /// @return The governor's voting privileges
+    function getGovernorPrivileges(address _governor) public override view returns (uint256) {
+        return privileges[_governor];
     }
 }
