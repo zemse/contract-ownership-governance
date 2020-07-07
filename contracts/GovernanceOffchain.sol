@@ -18,24 +18,24 @@ contract Governance is GovernanceOffchain {
     /// @dev Prevents replay of transactions. It is used as nonce.
     uint256 public override transactionsCount;
 
-    /// @dev Governor addresses with corresponding consents (vote weightage)
-    mapping(address => uint256) consents;
+    /// @dev Governor addresses with corresponding privileges (vote weightage)
+    mapping(address => uint256) privileges;
 
-    /// @dev Sum of all governor consents
-    uint256 public override totalConsent;
+    /// @dev Sum of all governor privileges
+    uint256 public override totalPrivilege;
 
     /// @notice Stores initial set of governors
     /// @param _governors List of initial governor addresses
-    /// @param _consents List of corresponding initial consents
-    constructor(address[] memory _governors, uint256[] memory _consents) public {
-        require(_governors.length == _consents.length, "Gov: Invalid input lengths");
+    /// @param _privileges List of corresponding initial privileges
+    constructor(address[] memory _governors, uint256[] memory _privileges) public {
+        require(_governors.length == _privileges.length, "Gov: Invalid input lengths");
 
-        uint256 _totalConsent;
+        uint256 _totalPrivilege;
         for (uint256 i = 0; i < _governors.length; i++) {
-            consents[_governors[i]] = _consents[i];
-            _totalConsent += _consents[i];
+            privileges[_governors[i]] = _privileges[i];
+            _totalPrivilege += _privileges[i];
         }
-        totalConsent = _totalConsent;
+        totalPrivilege = _totalPrivilege;
     }
 
     /// @notice Calls the dApp to perform administrative task
@@ -64,27 +64,29 @@ contract Governance is GovernanceOffchain {
 
     /// @notice Updates governor statuses
     /// @param _governors List of governor addresses
-    /// @param _newConsents List of corresponding new consents
-    function updateConsents(address[] memory _governors, uint256[] memory _newConsents) external {
+    /// @param _newPrivileges List of corresponding new privileges
+    function updatePrivileges(address[] memory _governors, uint256[] memory _newPrivileges)
+        external
+    {
         require(msg.sender == address(this), "Gov: Only self can call");
-        require(_governors.length == _newConsents.length, "Gov: Invalid input lengths");
+        require(_governors.length == _newPrivileges.length, "Gov: Invalid input lengths");
 
-        uint256 _totalConsent = totalConsent;
+        uint256 _totalPrivilege = totalPrivilege;
 
         for (uint256 i = 0; i < _governors.length; i++) {
-            if (_newConsents[i] != consents[_governors[i]]) {
+            if (_newPrivileges[i] != privileges[_governors[i]]) {
                 // TODO: Add safe math
-                _totalConsent = _totalConsent - consents[_governors[i]] + _newConsents[i];
+                _totalPrivilege = _totalPrivilege - privileges[_governors[i]] + _newPrivileges[i];
 
-                consents[_governors[i]] = _newConsents[i];
+                privileges[_governors[i]] = _newPrivileges[i];
             }
         }
 
-        totalConsent = _totalConsent;
+        totalPrivilege = _totalPrivilege;
     }
 
-    function getGovernorsConsent(address _governor) public override view returns (uint256) {
-        return consents[_governor];
+    function getGovernorPrivilege(address _governor) public override view returns (uint256) {
+        return privileges[_governor];
     }
 
     /// @notice Makes the signature by governor specific to this contract
@@ -98,7 +100,7 @@ contract Governance is GovernanceOffchain {
     /// @param _signatures sorted sigs according to increasing signer addresses
     function verifySignatures(bytes32 _digest, bytes[] memory _signatures) internal view {
         uint160 _lastGovernor;
-        uint256 _consent;
+        uint256 _privilege;
         for (uint256 i = 0; i < _signatures.length; i++) {
             address _signer = ECDSA.recover(_digest, _signatures[i]);
 
@@ -107,12 +109,12 @@ contract Governance is GovernanceOffchain {
             require(_thisGovernor > _lastGovernor, "Gov: Invalid arrangement");
             _lastGovernor = _thisGovernor;
 
-            require(getGovernorsConsent(_signer) > 0, "Gov: Not a governor");
-            _consent += getGovernorsConsent(_signer);
+            require(getGovernorPrivilege(_signer) > 0, "Gov: Not a governor");
+            _privilege += getGovernorPrivilege(_signer);
         }
 
         // 66% consensus
         // TODO: Add safe math
-        require(_consent * 3 > totalConsent * 2, "Gov: Not 66% consensus");
+        require(_privilege * 3 > totalPrivilege * 2, "Gov: Not 66% consensus");
     }
 }

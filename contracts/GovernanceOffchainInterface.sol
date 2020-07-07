@@ -8,9 +8,9 @@ interface GovernanceOffchain {
 
     function transactionsCount() external view returns (uint256);
 
-    function getGovernorsConsent(address _governor) external view returns (uint256);
+    function getGovernorPrivilege(address _governor) external view returns (uint256);
 
-    function totalConsent() external view returns (uint256);
+    function totalPrivilege() external view returns (uint256);
 
     function executeTransaction(
         uint256 _nonce,

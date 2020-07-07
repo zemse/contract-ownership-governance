@@ -7,7 +7,7 @@ import { GovernanceOffchain } from '../../build/typechain/GovernanceOffchain';
 let governanceInstance: GovernanceOffchain;
 let storageInstance: SimpleStorage;
 
-let governorsConsents: [ethers.Wallet, number][] = [
+let governorsPrivileges: [ethers.Wallet, number][] = [
   [new ethers.Wallet('0x' + '1'.repeat(64)), 1],
   [new ethers.Wallet('0x' + '2'.repeat(64)), 1],
   [new ethers.Wallet('0x' + '3'.repeat(64)), 1],
@@ -20,18 +20,18 @@ export const SimpleGovernance = () =>
     it('deploys governance contract with initial governors', async () => {
       const governanceFactory = new GovernanceOffchainFactory(global.provider.getSigner(0));
 
-      const governorAddresses = governorsConsents.map((vw) => vw[0].address);
-      const governorConsents = governorsConsents.map((vw) => vw[1]);
-      governanceInstance = await governanceFactory.deploy(governorAddresses, governorConsents);
+      const governorAddresses = governorsPrivileges.map((vw) => vw[0].address);
+      const governorPrivileges = governorsPrivileges.map((vw) => vw[1]);
+      governanceInstance = await governanceFactory.deploy(governorAddresses, governorPrivileges);
 
       for (const governorAddress of governorAddresses) {
-        const consent = await governanceInstance.getGovernorsConsent(governorAddress);
-        assert.strictEqual(consent.toNumber(), 1, 'should have 1 consent');
+        const privilege = await governanceInstance.getGovernorPrivilege(governorAddress);
+        assert.strictEqual(privilege.toNumber(), 1, 'should have 1 privilege');
       }
 
-      const totalConsent = await governanceInstance.totalConsent();
+      const totalPrivilege = await governanceInstance.totalPrivilege();
       assert.strictEqual(
-        totalConsent.toNumber(),
+        totalPrivilege.toNumber(),
         governorAddresses.length,
         'governor count should be correct'
       );
@@ -201,8 +201,8 @@ export const SimpleGovernance = () =>
     });
 
     it('updates governors removing a governor', async () => {
-      const data = governanceInstance.interface.encodeFunctionData('updateConsents', [
-        [governorsConsents[0][0].address],
+      const data = governanceInstance.interface.encodeFunctionData('updatePrivileges', [
+        [governorsPrivileges[0][0].address],
         [0],
       ]);
 
@@ -211,16 +211,16 @@ export const SimpleGovernance = () =>
         sortSignatures: true,
       });
 
-      const governorConsentBefore = await governanceInstance.getGovernorsConsent(
-        governorsConsents[0][0].address
+      const governorPrivilegeBefore = await governanceInstance.getGovernorPrivilege(
+        governorsPrivileges[0][0].address
       );
-      const totalConsentBefore = await governanceInstance.totalConsent();
+      const totalPrivilegeBefore = await governanceInstance.totalPrivilege();
       assert.strictEqual(
-        governorConsentBefore.toNumber(),
+        governorPrivilegeBefore.toNumber(),
         1,
-        'should have 1 governor consent initially'
+        'should have 1 governor privilege initially'
       );
-      assert.deepEqual(totalConsentBefore.toNumber(), 5, 'intially there should be 5 governors');
+      assert.deepEqual(totalPrivilegeBefore.toNumber(), 5, 'intially there should be 5 governors');
 
       await governanceInstance.executeTransaction(
         nonce,
@@ -229,21 +229,29 @@ export const SimpleGovernance = () =>
         signatures
       );
 
-      const governorConsentAfter = await governanceInstance.getGovernorsConsent(
-        governorsConsents[0][0].address
+      const governorPrivilegeAfter = await governanceInstance.getGovernorPrivilege(
+        governorsPrivileges[0][0].address
       );
-      const totalConsentAfter = await governanceInstance.totalConsent();
-      assert.strictEqual(governorConsentAfter.toNumber(), 0, 'governor consent should be zeroed');
-      assert.deepEqual(totalConsentAfter.toNumber(), 4, 'governor count should be decreased by 1');
+      const totalPrivilegeAfter = await governanceInstance.totalPrivilege();
+      assert.strictEqual(
+        governorPrivilegeAfter.toNumber(),
+        0,
+        'governor privilege should be zeroed'
+      );
+      assert.deepEqual(
+        totalPrivilegeAfter.toNumber(),
+        4,
+        'governor count should be decreased by 1'
+      );
 
-      // removing element from governorsConsents
-      governorsConsents = governorsConsents.slice(1);
+      // removing element from governorsPrivileges
+      governorsPrivileges = governorsPrivileges.slice(1);
     });
 
     it('updates governors by adding and removing at same time', async () => {
       const newGovernor = ethers.Wallet.createRandom();
-      const data = governanceInstance.interface.encodeFunctionData('updateConsents', [
-        [governorsConsents[0][0].address, newGovernor.address],
+      const data = governanceInstance.interface.encodeFunctionData('updatePrivileges', [
+        [governorsPrivileges[0][0].address, newGovernor.address],
         [0, 1],
       ]);
 
@@ -252,25 +260,25 @@ export const SimpleGovernance = () =>
         sortSignatures: true,
       });
 
-      const existingGovernorConsentBefore = await governanceInstance.getGovernorsConsent(
-        governorsConsents[0][0].address
+      const existingGovernorPrivilegeBefore = await governanceInstance.getGovernorPrivilege(
+        governorsPrivileges[0][0].address
       );
-      const newGovernorConsentBefore = await governanceInstance.getGovernorsConsent(
+      const newGovernorPrivilegeBefore = await governanceInstance.getGovernorPrivilege(
         newGovernor.address
       );
-      const totalConsentBefore = await governanceInstance.totalConsent();
+      const totalPrivilegeBefore = await governanceInstance.totalPrivilege();
 
       assert.strictEqual(
-        existingGovernorConsentBefore.toNumber(),
+        existingGovernorPrivilegeBefore.toNumber(),
         1,
-        'should have 1 governor consent initially'
+        'should have 1 governor privilege initially'
       );
       assert.strictEqual(
-        newGovernorConsentBefore.toNumber(),
+        newGovernorPrivilegeBefore.toNumber(),
         0,
         'should not be a governor initially'
       );
-      assert.deepEqual(totalConsentBefore.toNumber(), 4, 'intially there should be 4 governors');
+      assert.deepEqual(totalPrivilegeBefore.toNumber(), 4, 'intially there should be 4 governors');
 
       const tx = await governanceInstance.executeTransaction(
         nonce,
@@ -281,25 +289,29 @@ export const SimpleGovernance = () =>
       const r = await tx.wait();
       console.log(r.gasUsed.toNumber());
 
-      const existingGovernorConsentAfter = await governanceInstance.getGovernorsConsent(
-        governorsConsents[0][0].address
+      const existingGovernorPrivilegeAfter = await governanceInstance.getGovernorPrivilege(
+        governorsPrivileges[0][0].address
       );
-      const newGovernorConsentAfter = await governanceInstance.getGovernorsConsent(
+      const newGovernorPrivilegeAfter = await governanceInstance.getGovernorPrivilege(
         newGovernor.address
       );
-      const totalConsentAfter = await governanceInstance.totalConsent();
+      const totalPrivilegeAfter = await governanceInstance.totalPrivilege();
 
       assert.strictEqual(
-        existingGovernorConsentAfter.toNumber(),
+        existingGovernorPrivilegeAfter.toNumber(),
         0,
-        'governor consent should be revoked'
+        'governor privilege should be revoked'
       );
-      assert.strictEqual(newGovernorConsentAfter.toNumber(), 1, 'governor consent should be given');
-      assert.deepEqual(totalConsentAfter.toNumber(), 4, 'governor count should be same');
+      assert.strictEqual(
+        newGovernorPrivilegeAfter.toNumber(),
+        1,
+        'governor privilege should be given'
+      );
+      assert.deepEqual(totalPrivilegeAfter.toNumber(), 4, 'governor count should be same');
 
-      // removing element from governorsConsents
-      governorsConsents = governorsConsents.slice(1);
-      governorsConsents.push([newGovernor, 1]);
+      // removing element from governorsPrivileges
+      governorsPrivileges = governorsPrivileges.slice(1);
+      governorsPrivileges.push([newGovernor, 1]);
     });
   });
 
@@ -315,7 +327,7 @@ async function prepareSignatures(
     ethers.utils.concat([PREFIX, ethers.utils.hexZeroPad(nonce.toHexString(), 32), to, data])
   );
 
-  let signatures = governorsConsents
+  let signatures = governorsPrivileges
     .map((w) => {
       return w[0]._signingKey().signDigest(digest);
     })
