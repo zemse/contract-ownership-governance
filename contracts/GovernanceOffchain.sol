@@ -22,7 +22,7 @@ contract Governance is GovernanceOffchain {
     mapping(address => uint256) consents;
 
     /// @dev Sum of all governor consents
-    uint256 public override maxConsent;
+    uint256 public override totalConsent;
 
     /// @notice Stores initial set of governors
     /// @param _governors List of initial governor addresses
@@ -30,12 +30,12 @@ contract Governance is GovernanceOffchain {
     constructor(address[] memory _governors, uint256[] memory _consents) public {
         require(_governors.length == _consents.length, "Gov: Invalid input lengths");
 
-        uint256 _maxConsent;
+        uint256 _totalConsent;
         for (uint256 i = 0; i < _governors.length; i++) {
             consents[_governors[i]] = _consents[i];
-            _maxConsent += _consents[i];
+            _totalConsent += _consents[i];
         }
-        maxConsent = _maxConsent;
+        totalConsent = _totalConsent;
     }
 
     /// @notice Calls the dApp to perform administrative task
@@ -69,18 +69,18 @@ contract Governance is GovernanceOffchain {
         require(msg.sender == address(this), "Gov: Only self can call");
         require(_governors.length == _newConsents.length, "Gov: Invalid input lengths");
 
-        uint256 _maxConsent = maxConsent;
+        uint256 _totalConsent = totalConsent;
 
         for (uint256 i = 0; i < _governors.length; i++) {
             if (_newConsents[i] != consents[_governors[i]]) {
                 // TODO: Add safe math
-                _maxConsent = _maxConsent - consents[_governors[i]] + _newConsents[i];
+                _totalConsent = _totalConsent - consents[_governors[i]] + _newConsents[i];
 
                 consents[_governors[i]] = _newConsents[i];
             }
         }
 
-        maxConsent = _maxConsent;
+        totalConsent = _totalConsent;
     }
 
     function getGovernorsConsent(address _governor) public override view returns (uint256) {
@@ -113,6 +113,6 @@ contract Governance is GovernanceOffchain {
 
         // 66% consensus
         // TODO: Add safe math
-        require(_consent * 3 > maxConsent * 2, "Gov: Not 66% consensus");
+        require(_consent * 3 > totalConsent * 2, "Gov: Not 66% consensus");
     }
 }

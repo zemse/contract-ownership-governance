@@ -29,9 +29,9 @@ export const SimpleGovernance = () =>
         assert.strictEqual(consent.toNumber(), 1, 'should have 1 consent');
       }
 
-      const maxConsent = await governanceInstance.maxConsent();
+      const totalConsent = await governanceInstance.totalConsent();
       assert.strictEqual(
-        maxConsent.toNumber(),
+        totalConsent.toNumber(),
         governorAddresses.length,
         'governor count should be correct'
       );
@@ -214,13 +214,13 @@ export const SimpleGovernance = () =>
       const governorConsentBefore = await governanceInstance.getGovernorsConsent(
         governorsConsents[0][0].address
       );
-      const maxConsentBefore = await governanceInstance.maxConsent();
+      const totalConsentBefore = await governanceInstance.totalConsent();
       assert.strictEqual(
         governorConsentBefore.toNumber(),
         1,
         'should have 1 governor consent initially'
       );
-      assert.deepEqual(maxConsentBefore.toNumber(), 5, 'intially there should be 5 governors');
+      assert.deepEqual(totalConsentBefore.toNumber(), 5, 'intially there should be 5 governors');
 
       await governanceInstance.executeTransaction(
         nonce,
@@ -232,9 +232,9 @@ export const SimpleGovernance = () =>
       const governorConsentAfter = await governanceInstance.getGovernorsConsent(
         governorsConsents[0][0].address
       );
-      const maxConsentAfter = await governanceInstance.maxConsent();
+      const totalConsentAfter = await governanceInstance.totalConsent();
       assert.strictEqual(governorConsentAfter.toNumber(), 0, 'governor consent should be zeroed');
-      assert.deepEqual(maxConsentAfter.toNumber(), 4, 'governor count should be decreased by 1');
+      assert.deepEqual(totalConsentAfter.toNumber(), 4, 'governor count should be decreased by 1');
 
       // removing element from governorsConsents
       governorsConsents = governorsConsents.slice(1);
@@ -258,7 +258,7 @@ export const SimpleGovernance = () =>
       const newGovernorConsentBefore = await governanceInstance.getGovernorsConsent(
         newGovernor.address
       );
-      const maxConsentBefore = await governanceInstance.maxConsent();
+      const totalConsentBefore = await governanceInstance.totalConsent();
 
       assert.strictEqual(
         existingGovernorConsentBefore.toNumber(),
@@ -270,7 +270,7 @@ export const SimpleGovernance = () =>
         0,
         'should not be a governor initially'
       );
-      assert.deepEqual(maxConsentBefore.toNumber(), 4, 'intially there should be 4 governors');
+      assert.deepEqual(totalConsentBefore.toNumber(), 4, 'intially there should be 4 governors');
 
       const tx = await governanceInstance.executeTransaction(
         nonce,
@@ -287,7 +287,7 @@ export const SimpleGovernance = () =>
       const newGovernorConsentAfter = await governanceInstance.getGovernorsConsent(
         newGovernor.address
       );
-      const maxConsentAfter = await governanceInstance.maxConsent();
+      const totalConsentAfter = await governanceInstance.totalConsent();
 
       assert.strictEqual(
         existingGovernorConsentAfter.toNumber(),
@@ -295,7 +295,7 @@ export const SimpleGovernance = () =>
         'governor consent should be revoked'
       );
       assert.strictEqual(newGovernorConsentAfter.toNumber(), 1, 'governor consent should be given');
-      assert.deepEqual(maxConsentAfter.toNumber(), 4, 'governor count should be same');
+      assert.deepEqual(totalConsentAfter.toNumber(), 4, 'governor count should be same');
 
       // removing element from governorsConsents
       governorsConsents = governorsConsents.slice(1);

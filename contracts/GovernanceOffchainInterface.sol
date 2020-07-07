@@ -10,7 +10,7 @@ interface GovernanceOffchain {
 
     function getGovernorsConsent(address _governor) external view returns (uint256);
 
-    function maxConsent() external view returns (uint256);
+    function totalConsent() external view returns (uint256);
 
     function executeTransaction(
         uint256 _nonce,
