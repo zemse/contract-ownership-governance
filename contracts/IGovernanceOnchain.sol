@@ -1,9 +1,18 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.10;
+pragma experimental ABIEncoderV2;
 
 /// @title ERC-2767 Contract Ownership Governance Standard
 interface GovernanceOnchain {
+    struct Transaction {
+        address destination;
+        uint256 value;
+        bytes data;
+        bool executed;
+        uint256 consensus;
+    }
+
     /// @dev This emits when governors privilege changes
     event GovernorsPrivilegeUpdated(address[] governors, uint256[] privileges);
 
@@ -16,16 +25,7 @@ interface GovernanceOnchain {
     /// @return Sum of the privileges of all governors
     function totalPrivileges() external view returns (uint256);
 
-    function transactions(uint256 _transactionId)
-        external
-        view
-        returns (
-            address,
-            uint256,
-            bytes memory,
-            bool,
-            uint256
-        );
+    function getTransaction(uint256 _transactionId) external view returns (Transaction memory);
 
     /// @notice Allows an governor to submit and confirm a transaction.
     /// @param _destination Transaction target address.

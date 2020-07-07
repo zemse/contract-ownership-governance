@@ -1,24 +1,19 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.10;
+pragma experimental ABIEncoderV2;
 
 import "./IGovernanceOnchain.sol";
 
 contract Governance is GovernanceOnchain {
-    struct Transaction {
-        address destination;
-        uint256 value;
-        bytes data;
-        bool executed;
-        uint256 consensus;
-        mapping(address => bool) confirmation; /// @dev Transaction confirmation given by individual governors
-    }
-
     /// @dev Transactions proposed for being executed
-    Transaction[] public override transactions;
+    Transaction[] transactions;
 
     /// @dev Sum of the privileges of all governors
     uint256 public override totalPrivileges;
+
+    /// @dev Transaction confirmation given by individual governors
+    mapping(uint256 => mapping(address => bool)) confirmation;
 
     /// @dev Governor addresses with corresponding privileges (vote weightage)
     mapping(address => uint256) privileges;
@@ -75,8 +70,10 @@ contract Governance is GovernanceOnchain {
         require(privileges[msg.sender] > 0, "Gov: Only governors can call");
         require(_transactionId < transactions.length, "Gov: Tx doesnt exists");
         require(!transactions[_transactionId].executed, "Gov: Tx already executed");
+        require(confirmation[_transactionId][msg.sender], "Gov: Already confirmed");
 
-        transactions[_transactionId].confirmation[msg.sender] = true;
+        confirmation[_transactionId][msg.sender] = true;
+        transactions[_transactionId].consensus += getGovernorPrivileges(msg.sender);
     }
 
     /// @dev Allows a governor to revoke a confirmation for a transaction.
@@ -85,8 +82,10 @@ contract Governance is GovernanceOnchain {
         require(privileges[msg.sender] > 0, "Gov: Only governors can call");
         require(_transactionId < transactions.length, "Gov: Tx doesnt exists");
         require(!transactions[_transactionId].executed, "Gov: Tx already executed");
+        require(!confirmation[_transactionId][msg.sender], "Gov: Not confirmed");
 
-        transactions[_transactionId].confirmation[msg.sender] = false;
+        confirmation[_transactionId][msg.sender] = false;
+        transactions[_transactionId].consensus -= getGovernorPrivileges(msg.sender);
     }
 
     function executeTransaction(uint256 _transactionId) public override {
@@ -134,5 +133,14 @@ contract Governance is GovernanceOnchain {
     /// @return The governor's voting privileges
     function getGovernorPrivileges(address _governor) public override view returns (uint256) {
         return privileges[_governor];
+    }
+
+    function getTransaction(uint256 _transactionId)
+        public
+        override
+        view
+        returns (Transaction memory)
+    {
+        return transactions[_transactionId];
     }
 }
