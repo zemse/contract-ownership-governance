@@ -4,7 +4,7 @@ pragma solidity ^0.6.10;
 pragma experimental ABIEncoderV2;
 
 import "./lib/ECDSA.sol";
-import "./GovernanceOffchainInterface.sol";
+import "./IGovernanceOffchain.sol";
 
 /// @title Governance Offchain Smart Contract
 /// @notice Governs a decentralised application to perform administrative tasks.
