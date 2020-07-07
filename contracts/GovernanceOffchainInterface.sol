@@ -4,6 +4,8 @@ pragma solidity ^0.6.10;
 pragma experimental ABIEncoderV2;
 
 interface GovernanceOffchain {
+    event GovernorsPrivilegeUpdated(address[] governors, uint256[] privileges);
+
     function PREFIX() external pure returns (bytes memory);
 
     function transactionsCount() external view returns (uint256);

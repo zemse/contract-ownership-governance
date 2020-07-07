@@ -24,6 +24,8 @@ contract Governance is GovernanceOffchain {
     /// @dev Governor addresses with corresponding privileges (vote weightage)
     mapping(address => uint256) privileges;
 
+    event GovernorsPrivilegeUpdated(address[] governors, uint256[] privileges);
+
     /// @notice Stores initial set of governors
     /// @param _governors List of initial governor addresses
     /// @param _privileges List of corresponding initial privileges
@@ -36,6 +38,8 @@ contract Governance is GovernanceOffchain {
             _totalPrivilege += _privileges[i];
         }
         totalPrivilege = _totalPrivilege;
+
+        emit GovernorsPrivilegeUpdated(_governors, _privileges);
     }
 
     /// @notice Calls the dApp to perform administrative task
@@ -83,6 +87,8 @@ contract Governance is GovernanceOffchain {
         }
 
         totalPrivilege = _totalPrivilege;
+
+        emit GovernorsPrivilegeUpdated(_governors, _newPrivileges);
     }
 
     /// @notice Gets the consensus privilege of the governor
