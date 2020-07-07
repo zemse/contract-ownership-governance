@@ -9,7 +9,7 @@ import "./lib/ECDSA.sol";
 /// @notice Governs a decentralised application to perform administrative tasks.
 contract GovernanceOffChain {
     /// @dev EIP-191 Prepend byte + Version byte
-    bytes public constant PREFIX = hex"1966";
+    bytes public constant PREPEND_BYTES = hex"1966";
 
     /// @dev Keeps signed data scoped only for this governance contract
     bytes32 public constant DOMAIN_SEPERATOR = keccak256("TestlandGovernance");
@@ -51,9 +51,7 @@ contract GovernanceOffChain {
         require(_nonce >= transactionsCount, "Gov: Nonce is already used");
         require(_nonce == transactionsCount, "Gov: Nonce is too high");
 
-        bytes32 _digest = keccak256(
-            abi.encodePacked(PREFIX, DOMAIN_SEPERATOR, _nonce, _destination, _data)
-        );
+        bytes32 _digest = keccak256(abi.encodePacked(PREFIX(), _nonce, _destination, _data));
 
         verifySignatures(_digest, _signatures);
 
@@ -86,6 +84,12 @@ contract GovernanceOffChain {
 
     function getGovernorsConsent(address _governor) public view returns (uint256) {
         return consents[_governor];
+    }
+
+    /// @notice Makes the signature by governor specific to this contract
+    /// @return EIP-191 Message prefix for signing transaction with ECDSA
+    function PREFIX() public pure returns (bytes memory) {
+        return abi.encodePacked(PREPEND_BYTES, DOMAIN_SEPERATOR);
     }
 
     /// @notice Checks for consensus

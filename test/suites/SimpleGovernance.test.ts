@@ -310,16 +310,9 @@ async function prepareSignatures(
   options?: { sortSignatures: boolean }
 ): Promise<string[]> {
   const PREFIX = await governanceInstance.PREFIX();
-  const DOMAIN_SEPERATOR = await governanceInstance.DOMAIN_SEPERATOR();
 
   const digest = ethers.utils.keccak256(
-    ethers.utils.concat([
-      PREFIX,
-      DOMAIN_SEPERATOR,
-      ethers.utils.hexZeroPad(nonce.toHexString(), 32),
-      to,
-      data,
-    ])
+    ethers.utils.concat([PREFIX, ethers.utils.hexZeroPad(nonce.toHexString(), 32), to, data])
   );
 
   let signatures = governorsConsents
