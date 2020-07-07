@@ -24,6 +24,7 @@ contract Governance is GovernanceOffchain {
     /// @dev Governor addresses with corresponding privileges (vote weightage)
     mapping(address => uint256) privileges;
 
+    /// @dev This emits when governors privilege changes.
     event GovernorsPrivilegeUpdated(address[] governors, uint256[] privileges);
 
     /// @notice Stores initial set of governors
@@ -43,10 +44,11 @@ contract Governance is GovernanceOffchain {
     }
 
     /// @notice Calls the dApp to perform administrative task
-    /// @param _nonce serial number of transaction
-    /// @param _destination address of contract to make a call to, should be dApp address
-    /// @param _data input data in the transaction
-    /// @param _signatures sorted sigs according to increasing signer addresses (required to be collect off chain)
+    /// @param _nonce Serial number of transaction
+    /// @param _destination Address of contract to make a call to, should be dApp address
+    /// @param _data Input data in the transaction
+    /// @param _signatures Signatures of governors collected off chain
+    /// @dev The signatures are required to be sorted to prevent duplicates
     function executeTransaction(
         uint256 _nonce,
         address _destination,
