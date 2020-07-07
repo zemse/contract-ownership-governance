@@ -11,11 +11,11 @@ interface GovernanceOffchain {
     /// @notice Gets the consensus privilege of the governor
     /// @param _governor Address of the governor
     /// @return The governor's voting privileges
-    function getGovernorPrivilege(address _governor) external view returns (uint256);
+    function getGovernorPrivileges(address _governor) external view returns (uint256);
 
     /// @notice Gets the sum of the privileges of all governors
     /// @return Sum of the privileges of all governors
-    function totalPrivilege() external view returns (uint256);
+    function totalPrivileges() external view returns (uint256);
 
     /// @notice Get the transactions count
     /// @dev To be used as nonce

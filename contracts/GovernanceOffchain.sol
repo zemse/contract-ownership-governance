@@ -19,7 +19,7 @@ contract Governance is GovernanceOffchain {
     uint256 public override transactionsCount;
 
     /// @dev Sum of the privileges of all governors
-    uint256 public override totalPrivilege;
+    uint256 public override totalPrivileges;
 
     /// @dev Governor addresses with corresponding privileges (vote weightage)
     mapping(address => uint256) privileges;
@@ -33,12 +33,12 @@ contract Governance is GovernanceOffchain {
     constructor(address[] memory _governors, uint256[] memory _privileges) public {
         require(_governors.length == _privileges.length, "Gov: Invalid input lengths");
 
-        uint256 _totalPrivilege;
+        uint256 _totalPrivileges;
         for (uint256 i = 0; i < _governors.length; i++) {
             privileges[_governors[i]] = _privileges[i];
-            _totalPrivilege += _privileges[i];
+            _totalPrivileges += _privileges[i];
         }
-        totalPrivilege = _totalPrivilege;
+        totalPrivileges = _totalPrivileges;
 
         emit GovernorsPrivilegeUpdated(_governors, _privileges);
     }
@@ -77,18 +77,18 @@ contract Governance is GovernanceOffchain {
         require(msg.sender == address(this), "Gov: Only self can call");
         require(_governors.length == _newPrivileges.length, "Gov: Invalid input lengths");
 
-        uint256 _totalPrivilege = totalPrivilege;
+        uint256 _totalPrivileges = totalPrivileges;
 
         for (uint256 i = 0; i < _governors.length; i++) {
             if (_newPrivileges[i] != privileges[_governors[i]]) {
                 // TODO: Add safe math
-                _totalPrivilege = _totalPrivilege - privileges[_governors[i]] + _newPrivileges[i];
+                _totalPrivileges = _totalPrivileges - privileges[_governors[i]] + _newPrivileges[i];
 
                 privileges[_governors[i]] = _newPrivileges[i];
             }
         }
 
-        totalPrivilege = _totalPrivilege;
+        totalPrivileges = _totalPrivileges;
 
         emit GovernorsPrivilegeUpdated(_governors, _newPrivileges);
     }
@@ -96,7 +96,7 @@ contract Governance is GovernanceOffchain {
     /// @notice Gets the consensus privilege of the governor
     /// @param _governor Address of the governor
     /// @return The governor's voting privileges
-    function getGovernorPrivilege(address _governor) public override view returns (uint256) {
+    function getGovernorPrivileges(address _governor) public override view returns (uint256) {
         return privileges[_governor];
     }
 
@@ -120,12 +120,12 @@ contract Governance is GovernanceOffchain {
             require(_thisGovernor > _lastGovernor, "Gov: Invalid arrangement");
             _lastGovernor = _thisGovernor;
 
-            require(getGovernorPrivilege(_signer) > 0, "Gov: Not a governor");
-            _privilege += getGovernorPrivilege(_signer);
+            require(getGovernorPrivileges(_signer) > 0, "Gov: Not a governor");
+            _privilege += getGovernorPrivileges(_signer);
         }
 
         // 66% consensus
         // TODO: Add safe math
-        require(_privilege * 3 > totalPrivilege * 2, "Gov: Not 66% consensus");
+        require(_privilege * 3 > totalPrivileges * 2, "Gov: Not 66% consensus");
     }
 }
