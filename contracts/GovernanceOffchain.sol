@@ -4,10 +4,11 @@ pragma solidity ^0.6.10;
 pragma experimental ABIEncoderV2;
 
 import "./lib/ECDSA.sol";
+import "./GovernanceOffchainInterface.sol";
 
 /// @title Governance Offchain Smart Contract
 /// @notice Governs a decentralised application to perform administrative tasks.
-contract GovernanceOffChain {
+contract Governance is GovernanceOffchain {
     /// @dev EIP-191 Prepend byte + Version byte
     bytes public constant PREPEND_BYTES = hex"1966";
 
@@ -15,13 +16,13 @@ contract GovernanceOffChain {
     bytes32 public constant DOMAIN_SEPERATOR = keccak256("TestlandGovernance");
 
     /// @dev Prevents replay of transactions. It is used as nonce.
-    uint256 public transactionsCount;
+    uint256 public override transactionsCount;
 
     /// @dev Governor addresses with corresponding consents (vote weightage)
     mapping(address => uint256) consents;
 
     /// @dev Sum of all governor consents
-    uint256 public maxConsent;
+    uint256 public override maxConsent;
 
     /// @notice Stores initial set of governors
     /// @param _governors List of initial governor addresses
@@ -47,7 +48,7 @@ contract GovernanceOffChain {
         address _destination,
         bytes memory _data,
         bytes[] memory _signatures
-    ) external payable {
+    ) external override payable {
         require(_nonce >= transactionsCount, "Gov: Nonce is already used");
         require(_nonce == transactionsCount, "Gov: Nonce is too high");
 
@@ -82,13 +83,13 @@ contract GovernanceOffChain {
         maxConsent = _maxConsent;
     }
 
-    function getGovernorsConsent(address _governor) public view returns (uint256) {
+    function getGovernorsConsent(address _governor) public override view returns (uint256) {
         return consents[_governor];
     }
 
     /// @notice Makes the signature by governor specific to this contract
     /// @return EIP-191 Message prefix for signing transaction with ECDSA
-    function PREFIX() public pure returns (bytes memory) {
+    function PREFIX() public override pure returns (bytes memory) {
         return abi.encodePacked(PREPEND_BYTES, DOMAIN_SEPERATOR);
     }
 
