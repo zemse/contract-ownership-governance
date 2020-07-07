@@ -111,7 +111,7 @@ contract Governance is GovernanceOffchain {
     /// @param _signatures sorted sigs according to increasing signer addresses
     function verifySignatures(bytes32 _digest, bytes[] memory _signatures) internal view {
         uint160 _lastGovernor;
-        uint256 _privilege;
+        uint256 _consensus;
         for (uint256 i = 0; i < _signatures.length; i++) {
             address _signer = ECDSA.recover(_digest, _signatures[i]);
 
@@ -121,11 +121,11 @@ contract Governance is GovernanceOffchain {
             _lastGovernor = _thisGovernor;
 
             require(getGovernorPrivileges(_signer) > 0, "Gov: Not a governor");
-            _privilege += getGovernorPrivileges(_signer);
+            _consensus += getGovernorPrivileges(_signer);
         }
 
         // 66% consensus
         // TODO: Add safe math
-        require(_privilege * 3 > totalPrivileges * 2, "Gov: Not 66% consensus");
+        require(_consensus * 3 > totalPrivileges * 2, "Gov: Not 66% consensus");
     }
 }
