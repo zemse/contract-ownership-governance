@@ -7,31 +7,33 @@ import { GovernanceOffchain } from '../../build/typechain/GovernanceOffchain';
 let governanceInstance: GovernanceOffchain;
 let storageInstance: SimpleStorage;
 
-let ownersWallets: ethers.Wallet[] = [
-  new ethers.Wallet('0x' + '1'.repeat(64)),
-  new ethers.Wallet('0x' + '2'.repeat(64)),
-  new ethers.Wallet('0x' + '3'.repeat(64)),
-  new ethers.Wallet('0x' + '4'.repeat(64)),
-  new ethers.Wallet('0x' + '5'.repeat(64)),
+let governorsConsents: [ethers.Wallet, number][] = [
+  [new ethers.Wallet('0x' + '1'.repeat(64)), 1],
+  [new ethers.Wallet('0x' + '2'.repeat(64)), 1],
+  [new ethers.Wallet('0x' + '3'.repeat(64)), 1],
+  [new ethers.Wallet('0x' + '4'.repeat(64)), 1],
+  [new ethers.Wallet('0x' + '5'.repeat(64)), 1],
 ];
 
 export const SimpleGovernance = () =>
   describe('Simple Governance', () => {
-    it('deploys governance contract with initial owners', async () => {
+    it('deploys governance contract with initial governors', async () => {
       const governanceFactory = new GovernanceOffchainFactory(global.provider.getSigner(0));
 
-      const ownerAddresses = ownersWallets.map((vw) => vw.address);
-      governanceInstance = await governanceFactory.deploy(ownerAddresses);
+      const governorAddresses = governorsConsents.map((vw) => vw[0].address);
+      const governorConsents = governorsConsents.map((vw) => vw[1]);
+      governanceInstance = await governanceFactory.deploy(governorAddresses, governorConsents);
 
-      for (const ownerAddress of ownerAddresses) {
-        assert.ok(await governanceInstance.isValidator(ownerAddress), 'should have become owner');
+      for (const governorAddress of governorAddresses) {
+        const consent = await governanceInstance.getGovernorsConsent(governorAddress);
+        assert.strictEqual(consent.toNumber(), 1, 'should have 1 consent');
       }
 
-      const ownersCount = await governanceInstance.ownersCount();
+      const maxConsent = await governanceInstance.maxConsent();
       assert.strictEqual(
-        ownersCount.toNumber(),
-        ownerAddresses.length,
-        'owner count should be correct'
+        maxConsent.toNumber(),
+        governorAddresses.length,
+        'governor count should be correct'
       );
     });
 
@@ -55,7 +57,7 @@ export const SimpleGovernance = () =>
       assert.strictEqual(
         currentOwner,
         governanceInstance.address,
-        'governance should be next owner'
+        'governance should be next governor'
       );
     });
 
@@ -170,7 +172,7 @@ export const SimpleGovernance = () =>
       } catch (error) {
         const msg = error.error?.message || error.message;
 
-        assert.ok(msg.includes('Gov: Not 66% owners'), `Invalid error message: ${msg}`);
+        assert.ok(msg.includes('Gov: Not 66% consensus'), `Invalid error message: ${msg}`);
       }
     });
 
@@ -198,10 +200,10 @@ export const SimpleGovernance = () =>
       }
     });
 
-    it('updates owners removing a owner', async () => {
-      const data = governanceInstance.interface.encodeFunctionData('updateValidators', [
-        [ownersWallets[0].address],
-        [false],
+    it('updates governors removing a governor', async () => {
+      const data = governanceInstance.interface.encodeFunctionData('updateConsents', [
+        [governorsConsents[0][0].address],
+        [0],
       ]);
 
       const nonce = await governanceInstance.transactionsCount();
@@ -209,10 +211,16 @@ export const SimpleGovernance = () =>
         sortSignatures: true,
       });
 
-      const ownerStatusBefore = await governanceInstance.isValidator(ownersWallets[0].address);
-      const ownersCountBefore = await governanceInstance.ownersCount();
-      assert.strictEqual(ownerStatusBefore, true, 'should be a owner initially');
-      assert.deepEqual(ownersCountBefore.toNumber(), 5, 'intially there should be 5 owners');
+      const governorConsentBefore = await governanceInstance.getGovernorsConsent(
+        governorsConsents[0][0].address
+      );
+      const maxConsentBefore = await governanceInstance.maxConsent();
+      assert.strictEqual(
+        governorConsentBefore.toNumber(),
+        1,
+        'should have 1 governor consent initially'
+      );
+      assert.deepEqual(maxConsentBefore.toNumber(), 5, 'intially there should be 5 governors');
 
       await governanceInstance.executeTransaction(
         nonce,
@@ -221,20 +229,22 @@ export const SimpleGovernance = () =>
         signatures
       );
 
-      const ownerStatusAfter = await governanceInstance.isValidator(ownersWallets[0].address);
-      const ownersCountAfter = await governanceInstance.ownersCount();
-      assert.strictEqual(ownerStatusAfter, false, 'owner status should be revoked');
-      assert.deepEqual(ownersCountAfter.toNumber(), 4, 'owner count should be decreased by 1');
+      const governorConsentAfter = await governanceInstance.getGovernorsConsent(
+        governorsConsents[0][0].address
+      );
+      const maxConsentAfter = await governanceInstance.maxConsent();
+      assert.strictEqual(governorConsentAfter.toNumber(), 0, 'governor consent should be zeroed');
+      assert.deepEqual(maxConsentAfter.toNumber(), 4, 'governor count should be decreased by 1');
 
-      // removing element from ownersWallets
-      ownersWallets = ownersWallets.slice(1);
+      // removing element from governorsConsents
+      governorsConsents = governorsConsents.slice(1);
     });
 
-    it('updates owners by adding and removing at same time', async () => {
-      const newValidator = ethers.Wallet.createRandom();
-      const data = governanceInstance.interface.encodeFunctionData('updateValidators', [
-        [ownersWallets[0].address, newValidator.address],
-        [false, true],
+    it('updates governors by adding and removing at same time', async () => {
+      const newGovernor = ethers.Wallet.createRandom();
+      const data = governanceInstance.interface.encodeFunctionData('updateConsents', [
+        [governorsConsents[0][0].address, newGovernor.address],
+        [0, 1],
       ]);
 
       const nonce = await governanceInstance.transactionsCount();
@@ -242,15 +252,25 @@ export const SimpleGovernance = () =>
         sortSignatures: true,
       });
 
-      const existingValidatorStatusBefore = await governanceInstance.isValidator(
-        ownersWallets[0].address
+      const existingGovernorConsentBefore = await governanceInstance.getGovernorsConsent(
+        governorsConsents[0][0].address
       );
-      const newValidatorStatusBefore = await governanceInstance.isValidator(newValidator.address);
-      const ownersCountBefore = await governanceInstance.ownersCount();
+      const newGovernorConsentBefore = await governanceInstance.getGovernorsConsent(
+        newGovernor.address
+      );
+      const maxConsentBefore = await governanceInstance.maxConsent();
 
-      assert.strictEqual(existingValidatorStatusBefore, true, 'should be a owner initially');
-      assert.strictEqual(newValidatorStatusBefore, false, 'should not be a owner initially');
-      assert.deepEqual(ownersCountBefore.toNumber(), 4, 'intially there should be 4 owners');
+      assert.strictEqual(
+        existingGovernorConsentBefore.toNumber(),
+        1,
+        'should have 1 governor consent initially'
+      );
+      assert.strictEqual(
+        newGovernorConsentBefore.toNumber(),
+        0,
+        'should not be a governor initially'
+      );
+      assert.deepEqual(maxConsentBefore.toNumber(), 4, 'intially there should be 4 governors');
 
       const tx = await governanceInstance.executeTransaction(
         nonce,
@@ -261,19 +281,25 @@ export const SimpleGovernance = () =>
       const r = await tx.wait();
       console.log(r.gasUsed.toNumber());
 
-      const existingValidatorStatusAfter = await governanceInstance.isValidator(
-        ownersWallets[0].address
+      const existingGovernorConsentAfter = await governanceInstance.getGovernorsConsent(
+        governorsConsents[0][0].address
       );
-      const newValidatorStatusAfter = await governanceInstance.isValidator(newValidator.address);
-      const ownersCountAfter = await governanceInstance.ownersCount();
+      const newGovernorConsentAfter = await governanceInstance.getGovernorsConsent(
+        newGovernor.address
+      );
+      const maxConsentAfter = await governanceInstance.maxConsent();
 
-      assert.strictEqual(existingValidatorStatusAfter, false, 'owner status should be revoked');
-      assert.strictEqual(newValidatorStatusAfter, true, 'owner status should be given');
-      assert.deepEqual(ownersCountAfter.toNumber(), 4, 'owner count should be same');
+      assert.strictEqual(
+        existingGovernorConsentAfter.toNumber(),
+        0,
+        'governor consent should be revoked'
+      );
+      assert.strictEqual(newGovernorConsentAfter.toNumber(), 1, 'governor consent should be given');
+      assert.deepEqual(maxConsentAfter.toNumber(), 4, 'governor count should be same');
 
-      // removing element from ownersWallets
-      ownersWallets = ownersWallets.slice(1);
-      ownersWallets.push(newValidator);
+      // removing element from governorsConsents
+      governorsConsents = governorsConsents.slice(1);
+      governorsConsents.push([newGovernor, 1]);
     });
   });
 
@@ -296,9 +322,9 @@ async function prepareSignatures(
     ])
   );
 
-  let signatures = ownersWallets
+  let signatures = governorsConsents
     .map((w) => {
-      return w._signingKey().signDigest(digest);
+      return w[0]._signingKey().signDigest(digest);
     })
     .map(ethers.utils.joinSignature);
 

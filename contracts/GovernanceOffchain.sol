@@ -6,27 +6,35 @@ pragma experimental ABIEncoderV2;
 import "./lib/ECDSA.sol";
 
 /// @title Governance Offchain Smart Contract
-/// @notice Works as the owner of a decentralised application to perform administrative tasks.
+/// @notice Governs a decentralised application to perform administrative tasks.
 contract GovernanceOffChain {
     /// @dev EIP-191 Prepend byte + Version byte
     bytes public constant PREFIX = hex"1966";
+
     /// @dev Keeps signed data scoped only for this governance contract
     bytes32 public constant DOMAIN_SEPERATOR = keccak256("TestlandGovernance");
 
     /// @dev Prevents replay of transactions. It is used as nonce.
     uint256 public transactionsCount;
 
-    /// @dev These are addresses to whom the administration is decentralized
-    uint256 public ownersCount;
-    mapping(address => bool) owners;
+    /// @dev Governor addresses with corresponding consents (vote weightage)
+    mapping(address => uint256) consents;
 
-    /// @param _owners used to set the initial owners
-    constructor(address[] memory _owners) public {
-        for (uint256 i = 0; i < _owners.length; i++) {
-            owners[_owners[i]] = true;
+    /// @dev Sum of all governor consents
+    uint256 public maxConsent;
+
+    /// @notice Stores initial set of governors
+    /// @param _governors List of initial governor addresses
+    /// @param _consents List of corresponding initial consents
+    constructor(address[] memory _governors, uint256[] memory _consents) public {
+        require(_governors.length == _consents.length, "Gov: Invalid input lengths");
+
+        uint256 _maxConsent;
+        for (uint256 i = 0; i < _governors.length; i++) {
+            consents[_governors[i]] = _consents[i];
+            _maxConsent += _consents[i];
         }
-
-        ownersCount = _owners.length;
+        maxConsent = _maxConsent;
     }
 
     /// @notice Calls the dApp to perform administrative task
@@ -55,51 +63,51 @@ contract GovernanceOffChain {
         require(_success, "Call was reverted");
     }
 
-    /// @notice Updates owner statuses
-    /// @param _owners List of addresses to update owner status
-    /// @param _newStatus List of corresponding new status of addresses
-    function updateValidators(address[] memory _owners, bool[] memory _newStatus) external {
+    /// @notice Updates governor statuses
+    /// @param _governors List of governor addresses
+    /// @param _newConsents List of corresponding new consents
+    function updateConsents(address[] memory _governors, uint256[] memory _newConsents) external {
         require(msg.sender == address(this), "Gov: Only self can call");
-        require(_owners.length == _newStatus.length, "Gov: Invalid input lengths");
+        require(_governors.length == _newConsents.length, "Gov: Invalid input lengths");
 
-        uint256 _ownersCount = ownersCount;
+        uint256 _maxConsent = maxConsent;
 
-        for (uint256 i = 0; i < _owners.length; i++) {
-            if (_newStatus[i] != owners[_owners[i]]) {
-                if (_newStatus[i]) {
-                    _ownersCount++;
-                } else {
-                    _ownersCount--;
-                }
+        for (uint256 i = 0; i < _governors.length; i++) {
+            if (_newConsents[i] != consents[_governors[i]]) {
+                // TODO: Add safe math
+                _maxConsent = _maxConsent - consents[_governors[i]] + _newConsents[i];
 
-                owners[_owners[i]] = _newStatus[i];
+                consents[_governors[i]] = _newConsents[i];
             }
         }
 
-        ownersCount = _ownersCount;
+        maxConsent = _maxConsent;
     }
 
-    function isValidator(address _owner) public view returns (bool) {
-        return owners[_owner];
+    function getGovernorsConsent(address _governor) public view returns (uint256) {
+        return consents[_governor];
     }
 
     /// @notice Checks for consensus
     /// @param _digest hash of sign data
     /// @param _signatures sorted sigs according to increasing signer addresses
     function verifySignatures(bytes32 _digest, bytes[] memory _signatures) internal view {
-        uint160 _lastValidator;
+        uint160 _lastGovernor;
+        uint256 _consent;
         for (uint256 i = 0; i < _signatures.length; i++) {
             address _signer = ECDSA.recover(_digest, _signatures[i]);
 
             // Prevents duplicate signatures
-            uint160 _thisValidator = uint160(_signer);
-            require(_thisValidator > _lastValidator, "Gov: Invalid arrangement");
-            _lastValidator = _thisValidator;
+            uint160 _thisGovernor = uint160(_signer);
+            require(_thisGovernor > _lastGovernor, "Gov: Invalid arrangement");
+            _lastGovernor = _thisGovernor;
 
-            require(isValidator(_signer), "Gov: Not a owner");
+            require(getGovernorsConsent(_signer) > 0, "Gov: Not a governor");
+            _consent += getGovernorsConsent(_signer);
         }
 
         // 66% consensus
-        require(_signatures.length * 3 > ownersCount * 2, "Gov: Not 66% owners");
+        // TODO: Add safe math
+        require(_consent * 3 > maxConsent * 2, "Gov: Not 66% consensus");
     }
 }
