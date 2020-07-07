@@ -73,6 +73,7 @@ contract Governance is GovernanceOffchain {
     /// @param _newPrivileges List of corresponding new privileges
     function updatePrivileges(address[] memory _governors, uint256[] memory _newPrivileges)
         external
+        override
     {
         require(msg.sender == address(this), "Gov: Only self can call");
         require(_governors.length == _newPrivileges.length, "Gov: Invalid input lengths");

@@ -38,4 +38,10 @@ interface GovernanceOffchain {
         bytes memory _data,
         bytes[] memory _signatures
     ) external payable;
+
+    /// @notice Updates governor statuses
+    /// @param _governors List of governor addresses
+    /// @param _newPrivileges List of corresponding new privileges
+    function updatePrivileges(address[] memory _governors, uint256[] memory _newPrivileges)
+        external;
 }
