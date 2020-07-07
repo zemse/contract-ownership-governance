@@ -40,6 +40,33 @@ contract GovernanceOnchain {
         emit GovernorsPrivilegeUpdated(_governors, _privileges);
     }
 
+    /// @dev Allows an governor to submit and confirm a transaction.
+    /// @param _destination Transaction target address.
+    /// @param _value Transaction ether value.
+    /// @param _data Transaction data payload.
+    /// @return Returns transaction ID.
+    function submitTransaction(
+        address _destination,
+        uint256 _value,
+        bytes memory _data
+    ) public override returns (uint256) {
+        uint256 _transactionId = transactions.length;
+        transactions.push(
+            Transaction({
+                destination: _destination,
+                value: _value,
+                data: _data,
+                executed: false,
+                consensus: 0
+            })
+        );
+
+        /// @dev only governor can confirm the transaction
+        confirmTransaction(_transactionId);
+
+        return _transactionId;
+    }
+
     /// @dev Allows a governor to confirm a transaction.
     /// @param _transactionId Transaction ID.
     function confirmTransaction(uint256 _transactionId) public {
