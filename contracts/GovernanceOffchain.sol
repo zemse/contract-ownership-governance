@@ -18,11 +18,11 @@ contract Governance is GovernanceOffchain {
     /// @dev Prevents replay of transactions. It is used as nonce.
     uint256 public override transactionsCount;
 
+    /// @dev Sum of the privileges of all governors
+    uint256 public override totalPrivilege;
+
     /// @dev Governor addresses with corresponding privileges (vote weightage)
     mapping(address => uint256) privileges;
-
-    /// @dev Sum of all governor privileges
-    uint256 public override totalPrivilege;
 
     /// @notice Stores initial set of governors
     /// @param _governors List of initial governor addresses
@@ -85,6 +85,9 @@ contract Governance is GovernanceOffchain {
         totalPrivilege = _totalPrivilege;
     }
 
+    /// @notice Gets the consensus privilege of the governor
+    /// @param _governor Address of the governor
+    /// @return The governor's voting privileges
     function getGovernorPrivilege(address _governor) public override view returns (uint256) {
         return privileges[_governor];
     }
