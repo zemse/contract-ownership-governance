@@ -13,18 +13,6 @@ interface GovernanceOnchain {
         uint256 consensus;
     }
 
-    /// @dev This emits when governors privilege changes
-    event GovernorsPrivilegeUpdated(address[] governors, uint256[] privileges);
-
-    /// @notice Gets the consensus privilege of the governor
-    /// @param _governor Address of the governor
-    /// @return The governor's voting privileges
-    function getGovernorPrivileges(address _governor) external view returns (uint256);
-
-    /// @notice Gets the sum of the privileges of all governors
-    /// @return Sum of the privileges of all governors
-    function totalPrivileges() external view returns (uint256);
-
     function getTransaction(uint256 _transactionId) external view returns (Transaction memory);
 
     /// @notice Allows an governor to submit and confirm a transaction.
@@ -49,10 +37,4 @@ interface GovernanceOnchain {
     /// @notice Calls the dApp to perform administrative task
     /// @param _transactionId Transaction ID
     function executeTransaction(uint256 _transactionId) external;
-
-    /// @notice Updates governor statuses
-    /// @param _governors List of governor addresses
-    /// @param _newPrivileges List of corresponding new privileges
-    function updatePrivileges(address[] memory _governors, uint256[] memory _newPrivileges)
-        external;
 }

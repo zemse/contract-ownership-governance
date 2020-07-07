@@ -4,8 +4,9 @@ pragma solidity ^0.6.10;
 pragma experimental ABIEncoderV2;
 
 import "./IGovernanceOnchain.sol";
+import "./IWeightedGovernance.sol";
 
-contract Governance is GovernanceOnchain {
+contract Governance is GovernanceOnchain, WeightedGovernance {
     /// @dev Transactions proposed for being executed
     Transaction[] transactions;
 
@@ -17,9 +18,6 @@ contract Governance is GovernanceOnchain {
 
     /// @dev Governor addresses with corresponding privileges (vote weightage)
     mapping(address => uint256) privileges;
-
-    /// @dev This emits when governors privilege changes
-    event GovernorsPrivilegeUpdated(address[] governors, uint256[] privileges);
 
     /// @notice Stores initial set of governors
     /// @param _governors List of initial governor addresses

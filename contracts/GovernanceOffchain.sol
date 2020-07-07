@@ -5,10 +5,11 @@ pragma experimental ABIEncoderV2;
 
 import "./lib/ECDSA.sol";
 import "./IGovernanceOffchain.sol";
+import "./IWeightedGovernance.sol";
 
 /// @title Governance Offchain Smart Contract
 /// @notice Governs a decentralised application to perform administrative tasks.
-contract Governance is GovernanceOffchain {
+contract Governance is GovernanceOffchain, WeightedGovernance {
     /// @dev EIP-191 Prepend byte + Version byte
     bytes public constant PREPEND_BYTES = hex"1966";
 
@@ -23,9 +24,6 @@ contract Governance is GovernanceOffchain {
 
     /// @dev Governor addresses with corresponding privileges (vote weightage)
     mapping(address => uint256) privileges;
-
-    /// @dev This emits when governors privilege changes.
-    event GovernorsPrivilegeUpdated(address[] governors, uint256[] privileges);
 
     /// @notice Stores initial set of governors
     /// @param _governors List of initial governor addresses
