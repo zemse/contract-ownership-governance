@@ -91,7 +91,7 @@ export const OnchainEqual = () =>
       assert.strictEqual(requiredAfter.toNumber(), 3, 'required should be 3 as 50%+ of 5');
     });
 
-    it('creates a transaction from first account to update storage and tries to execute it expecting revert', async () => {
+    it('creates a transaction from first governor to update storage and tries to execute it expecting revert', async () => {
       const data = storageInstance.interface.encodeFunctionData('setText', ['ilovemusic']);
 
       txId = await governanceInstance
@@ -121,7 +121,7 @@ export const OnchainEqual = () =>
       }
     });
 
-    it('tries to reconfirm transaction using account 1 expecting revert', async () => {
+    it('tries to reconfirm transaction using governor 1 expecting revert', async () => {
       try {
         await governanceInstance
           .connect(governors[0].connect(global.provider))
@@ -132,6 +132,51 @@ export const OnchainEqual = () =>
         const msg = error.error?.message || error.message;
 
         assert.ok(msg.includes('Gov: Already confirmed'), `Invalid error message: ${msg}`);
+      }
+    });
+
+    it('confirms transaction using governor 2 and tries to execute expecting revert', async () => {
+      await governanceInstance
+        .connect(governors[1].connect(global.provider))
+        .confirmTransaction(txId);
+
+      const t = await governanceInstance.getTransaction(txId);
+      assert.strictEqual(t.votes.toNumber(), 2, 'should get voted');
+
+      try {
+        await governanceInstance
+          .connect(governors[1].connect(global.provider))
+          .executeTransaction(txId);
+
+        assert(false, 'should have thrown error');
+      } catch (error) {
+        const msg = error.error?.message || error.message;
+
+        assert.ok(msg.includes('Gov: Consensus not acheived'), `Invalid error message: ${msg}`);
+      }
+    });
+
+    it('confirms transaction using governor 3 and tx gets executed', async () => {
+      await governanceInstance
+        .connect(governors[2].connect(global.provider))
+        .confirmTransaction(txId);
+
+      const t = await governanceInstance.getTransaction(txId);
+      assert.strictEqual(t.votes.toNumber(), 3, 'should get voted');
+      assert.ok(t.executed, 'tx should be executed since 51% acheived');
+    });
+
+    it('tries to re-execute transaction expecting revert', async () => {
+      try {
+        await governanceInstance
+          .connect(governors[1].connect(global.provider))
+          .executeTransaction(txId);
+
+        assert(false, 'should have thrown error');
+      } catch (error) {
+        const msg = error.error?.message || error.message;
+
+        assert.ok(msg.includes('Gov: Tx already executed'), `Invalid error message: ${msg}`);
       }
     });
   });
