@@ -91,7 +91,7 @@ export const OnchainEqual = () =>
       assert.strictEqual(requiredAfter.toNumber(), 3, 'required should be 3 as 50%+ of 5');
     });
 
-    it('creates a transaction to update storage and tries to execute it expecting revert', async () => {
+    it('creates a transaction from first account to update storage and tries to execute it expecting revert', async () => {
       const data = storageInstance.interface.encodeFunctionData('setText', ['ilovemusic']);
 
       txId = await governanceInstance
@@ -113,11 +113,25 @@ export const OnchainEqual = () =>
           .connect(governors[0].connect(global.provider))
           .executeTransaction(txId);
 
-        assert(false, 'less signatures should have thrown error');
+        assert(false, 'should have thrown error');
       } catch (error) {
         const msg = error.error?.message || error.message;
 
         assert.ok(msg.includes('Gov: Consensus not acheived'), `Invalid error message: ${msg}`);
+      }
+    });
+
+    it('tries to reconfirm transaction using account 1 expecting revert', async () => {
+      try {
+        await governanceInstance
+          .connect(governors[0].connect(global.provider))
+          .confirmTransaction(txId);
+
+        assert(false, 'should have thrown error');
+      } catch (error) {
+        const msg = error.error?.message || error.message;
+
+        assert.ok(msg.includes('Gov: Already confirmed'), `Invalid error message: ${msg}`);
       }
     });
   });
