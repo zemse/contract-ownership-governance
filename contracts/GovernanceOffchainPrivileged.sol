@@ -59,7 +59,7 @@ contract Governance is IGovernanceOffchain, IGovernancePrivileged {
         address _destination,
         bytes memory _data,
         bytes[] memory _signatures
-    ) external override payable {
+    ) public override payable {
         require(_nonce >= transactionsCount, "Gov: Nonce is already used");
         require(_nonce == transactionsCount, "Gov: Nonce is too high");
 
@@ -157,5 +157,25 @@ contract Governance is IGovernanceOffchain, IGovernancePrivileged {
     function setConsensus(uint256 _numerator, uint256 _denominator) public override onlyGovernance {
         consensus[0] = _numerator;
         consensus[1] = _denominator;
+    }
+
+    /// @notice Query if a contract implements an interface
+    /// @param interfaceID The interface identifier, as specified in ERC-165
+    /// @dev Interface identification is specified in ERC-165. This function
+    ///  uses less than 30,000 gas.
+    /// @return `true` if the contract implements `interfaceID` and
+    ///  `interfaceID` is not 0xffffffff, `false` otherwise
+    function supportsInterface(bytes4 interfaceID) external pure returns (bool) {
+        return
+            // Off-chain 0x32542713
+            interfaceID == this.executeTransaction.selector ^ this.transactionsCount.selector ||
+            // Privileged Voting Rights 0x69c56387
+            interfaceID ==
+            this.powerOf.selector ^
+                this.totalPower.selector ^
+                this.updatePower.selector ^
+                this.required.selector ^
+                this.getConsensus.selector ^
+                this.setConsensus.selector;
     }
 }

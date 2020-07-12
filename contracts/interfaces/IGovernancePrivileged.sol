@@ -3,6 +3,7 @@
 pragma solidity ^0.6.10;
 
 /// @title ERC-2767 Governance with Privileged Voting Rights
+/// @dev ERC-165 InterfaceID: 0x69c56387
 interface IGovernancePrivileged {
     /// @dev This emits when governor power changes
     event GovernorPowerUpdated(address indexed governor, uint256 power);

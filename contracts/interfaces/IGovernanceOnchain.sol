@@ -4,6 +4,7 @@ pragma solidity ^0.6.10;
 pragma experimental ABIEncoderV2;
 
 /// @title ERC-2767 On-chain Governance
+/// @dev ERC-165 InterfaceID: 0x947133b4
 interface IGovernanceOnchain {
     struct Transaction {
         address destination;

@@ -229,4 +229,32 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
 
         governors[_index] = _newGovernor;
     }
+
+    /// @notice Query if a contract implements an interface
+    /// @param interfaceID The interface identifier, as specified in ERC-165
+    /// @dev Interface identification is specified in ERC-165. This function
+    ///  uses less than 30,000 gas.
+    /// @return `true` if the contract implements `interfaceID` and
+    ///  `interfaceID` is not 0xffffffff, `false` otherwise
+    function supportsInterface(bytes4 interfaceID) external pure returns (bool) {
+        return
+            // On-chain 0x947133b4
+            interfaceID ==
+            this.getTransaction.selector ^
+                this.createTransaction.selector ^
+                this.confirmTransaction.selector ^
+                this.revokeConfirmation.selector ^
+                this.executeTransaction.selector ||
+            // Equal Voting Rights 0xbfca4246
+            interfaceID ==
+            this.getGovernors.selector ^
+                this.isGovernor.selector ^
+                this.governorsCount.selector ^
+                this.addGovernor.selector ^
+                this.removeGovernor.selector ^
+                this.replaceGovernor.selector ^
+                this.required.selector ^
+                this.getConsensus.selector ^
+                this.setConsensus.selector;
+    }
 }

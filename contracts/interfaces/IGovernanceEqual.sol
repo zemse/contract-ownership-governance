@@ -3,6 +3,7 @@
 pragma solidity ^0.6.10;
 
 /// @title ERC-2767 Governance with Equal Voting Rights
+/// @dev ERC-165 InterfaceID: 0xbfca4246
 interface IGovernanceEqual {
     /// @dev This emits when a governor is added
     event GovernorAdded(address indexed governor);
