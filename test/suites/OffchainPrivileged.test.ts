@@ -39,6 +39,16 @@ export const OffchainPrivileged = () =>
       );
     });
 
+    it('checks if contract supports EIP-2767 Offchain Interface', async () => {
+      const supports = await governanceInstance.supportsInterface('0x32542713');
+      assert.ok(supports, 'should support EIP-2767 Offchain Interface');
+    });
+
+    it('checks if contract supports EIP-2767 Privileged Voting Rights Interface', async () => {
+      const supports = await governanceInstance.supportsInterface('0x69c56387');
+      assert.ok(supports, 'should support EIP-2767 Privileged Voting Rights Interface');
+    });
+
     it('deploys simple storage contract', async () => {
       const storageFactory = new SimpleStorageFactory(global.provider.getSigner(0));
 

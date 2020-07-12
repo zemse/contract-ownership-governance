@@ -37,6 +37,16 @@ export const OnchainEqual = () =>
       assert.strictEqual(count.toNumber(), governors.length);
     });
 
+    it('checks if contract supports EIP-2767 Onchain Interface', async () => {
+      const supports = await governanceInstance.supportsInterface('0x947133b4');
+      assert.ok(supports, 'should support EIP-2767 Onchain Interface');
+    });
+
+    it('checks if contract supports EIP-2767 Equal Voting Rights Interface', async () => {
+      const supports = await governanceInstance.supportsInterface('0xbfca4246');
+      assert.ok(supports, 'should support EIP-2767 Equal Voting Rights Interface');
+    });
+
     it('deploys simple storage contract', async () => {
       const storageFactory = new SimpleStorageFactory(global.provider.getSigner(0));
 
