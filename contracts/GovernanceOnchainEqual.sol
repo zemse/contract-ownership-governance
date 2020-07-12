@@ -88,7 +88,7 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
             value: transactions[_transactionId].value
         }(transactions[_transactionId].data);
 
-        require(_success, "Call was reverted");
+        require(_success, "Gov: Call was reverted");
     }
 
     /// @notice Checks if transaction is confirmed
@@ -151,7 +151,7 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
     /// @notice Adds governor
     /// @param _newGovernor New governor addresses
     function addGovernor(address _newGovernor) public override {
-        require(!isGovernor(_newGovernor), "Already a governor");
+        require(!isGovernor(_newGovernor), "Gov: Already a governor");
         governors.push(_newGovernor);
     }
 
@@ -185,7 +185,7 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
             }
         }
 
-        require(_exists, "Governor does not exist");
+        require(_exists, "Gov: Governor does not exist");
 
         governors[_index] = governors[governors.length - 1];
         governors.pop();
@@ -204,7 +204,7 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
             }
         }
 
-        require(_exists, "Governor does not exist");
+        require(_exists, "Gov: Governor does not exist");
 
         governors[_index] = _newGovernor;
     }

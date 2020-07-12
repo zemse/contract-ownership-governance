@@ -195,7 +195,7 @@ export const OffchainPrivileged = () =>
       } catch (error) {
         const msg = error.error?.message || error.message;
 
-        assert.ok(msg.includes('Gov: Not 66% consensus'), `Invalid error message: ${msg}`);
+        assert.ok(msg.includes('Gov: Consensus not acheived'), `Invalid error message: ${msg}`);
       }
     });
 

@@ -29,7 +29,7 @@ contract Governance is IGovernanceOffchain, IGovernancePrivileged {
 
     /// @dev This contract calls self methods if consensus is acheived
     modifier onlyGovernance() {
-        require(msg.sender == address(this), "Only Governance");
+        require(msg.sender == address(this), "Gov: Only Governance");
         _;
     }
 
@@ -70,7 +70,7 @@ contract Governance is IGovernanceOffchain, IGovernancePrivileged {
         transactionsCount++;
 
         (bool _success, ) = _destination.call{ value: msg.value }(_data);
-        require(_success, "Call was reverted");
+        require(_success, "Gov: Call was reverted");
     }
 
     /// @notice Updates governor statuses
@@ -124,7 +124,7 @@ contract Governance is IGovernanceOffchain, IGovernancePrivileged {
 
         // 66% consensus
         // TODO: Add safe math
-        require(_consensus * 3 > totalPower * 2, "Gov: Not 66% consensus");
+        require(_consensus >= required(), "Gov: Consensus not acheived");
     }
 
     /// @notice Gets static or dynamic number votes required for consensus
