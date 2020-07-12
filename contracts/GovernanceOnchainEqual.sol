@@ -21,6 +21,16 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
     /// @dev Transaction confirmation given by individual governors
     mapping(uint256 => mapping(address => bool)) confirmation;
 
+    modifier onlyGovernor() {
+        require(isGovernor(msg.sender), "Gov: Only Governor");
+        _;
+    }
+
+    modifier onlyGovernance() {
+        require(msg.sender == address(this), "Gov: Only Governance");
+        _;
+    }
+
     /// @notice Stores initial set of governors
     /// @param _governors List of initial governor addresses
     constructor(address[] memory _governors) public {
@@ -39,7 +49,7 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
         address _destination,
         uint256 _value,
         bytes memory _data
-    ) public override returns (uint256) {
+    ) public override onlyGovernor returns (uint256) {
         uint256 _transactionId = transactions.length;
         transactions.push(
             Transaction({
@@ -59,7 +69,7 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
 
     /// @dev Allows a governor to confirm a transaction.
     /// @param _transactionId Transaction ID.
-    function confirmTransaction(uint256 _transactionId) public override {
+    function confirmTransaction(uint256 _transactionId) public override onlyGovernor {
         require(_transactionId < transactions.length, "Gov: Tx doesnt exists");
         require(!transactions[_transactionId].executed, "Gov: Tx already executed");
         require(!confirmation[_transactionId][msg.sender], "Gov: Already confirmed");
@@ -74,7 +84,7 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
 
     /// @dev Allows a governor to revoke a confirmation for a transaction.
     /// @param _transactionId Transaction ID.
-    function revokeConfirmation(uint256 _transactionId) public override {
+    function revokeConfirmation(uint256 _transactionId) public override onlyGovernor {
         require(_transactionId < transactions.length, "Gov: Tx doesnt exists");
         require(!transactions[_transactionId].executed, "Gov: Tx already executed");
         require(confirmation[_transactionId][msg.sender], "Gov: Not confirmed");
@@ -85,7 +95,7 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
 
     /// @notice Calls the governed contract to perform administrative task
     /// @param _transactionId Transaction ID
-    function executeTransaction(uint256 _transactionId) public override {
+    function executeTransaction(uint256 _transactionId) public override onlyGovernor {
         require(!transactions[_transactionId].executed, "Gov: Tx already executed");
         require(isTransactionConfirmed(_transactionId), "Gov: Consensus not acheived");
 
@@ -144,7 +154,7 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
     ///         the numerator represents simple number instead of fraction
     /// @dev For 66% consensus _numerator = 2, _denominator = 3
     ///      For 5 fixed votes _numerator = 5, _denominator = 0
-    function setConsensus(uint256 _numerator, uint256 _denominator) public override {
+    function setConsensus(uint256 _numerator, uint256 _denominator) public override onlyGovernance {
         consensus[0] = _numerator;
         consensus[1] = _denominator;
     }
@@ -157,7 +167,7 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
 
     /// @notice Adds governor
     /// @param _newGovernor New governor addresses
-    function addGovernor(address _newGovernor) public override {
+    function addGovernor(address _newGovernor) public override onlyGovernance {
         require(!isGovernor(_newGovernor), "Gov: Already a governor");
         governors.push(_newGovernor);
     }
@@ -182,7 +192,7 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
 
     /// @notice Removes governor
     /// @param _existingGovernor Existing governor addresses
-    function removeGovernor(address _existingGovernor) public override {
+    function removeGovernor(address _existingGovernor) public override onlyGovernance {
         uint256 _index;
         bool _exists;
         for (uint256 i = 0; i < governors.length; i++) {
@@ -201,7 +211,11 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
     /// @notice Removes governor
     /// @param _governor Existing governor address
     /// @param _newGovernor New governor address
-    function replaceGovernor(address _governor, address _newGovernor) public override {
+    function replaceGovernor(address _governor, address _newGovernor)
+        public
+        override
+        onlyGovernance
+    {
         uint256 _index;
         bool _exists;
         for (uint256 i = 0; i < governors.length; i++) {
