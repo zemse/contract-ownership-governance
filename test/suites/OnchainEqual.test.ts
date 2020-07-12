@@ -17,6 +17,8 @@ let governors: ethers.Wallet[] = [
 
 export const OnchainEqual = () =>
   describe('Governance Onchain Equal', () => {
+    let txId: ethers.BigNumber;
+
     it('deploys governance contract with initial governors', async () => {
       const governanceFactory = new GovernanceOnchainEqualFactory(global.provider.getSigner(0));
 
@@ -63,16 +65,19 @@ export const OnchainEqual = () =>
       // setting 66% as consensus
       const data = governanceInstance.interface.encodeFunctionData('setConsensus', [2, 3]);
 
-      const txId = await governanceInstance.callStatic.createTransaction(
-        governanceInstance.address,
-        0,
-        data
-      );
+      txId = await governanceInstance
+        .connect(global.provider)
+        .callStatic.createTransaction(governanceInstance.address, 0, data, {
+          // @ts-ignore https://github.com/ethereum-ts/TypeChain/pull/258
+          from: governors[0].address,
+        });
 
       const requiredBefore = await governanceInstance.required();
       assert.strictEqual(requiredBefore.toNumber(), 0, 'required should be 0 initially');
 
-      await governanceInstance.createTransaction(governanceInstance.address, 0, data);
+      await governanceInstance
+        .connect(governors[0].connect(global.provider))
+        .createTransaction(governanceInstance.address, 0, data);
 
       // since before setting consensus, required consensus is zero, the transaction gets executed
       const t = await governanceInstance.getTransaction(txId);
@@ -84,5 +89,35 @@ export const OnchainEqual = () =>
 
       const requiredAfter = await governanceInstance.required();
       assert.strictEqual(requiredAfter.toNumber(), 4, 'required should be 4 as 66%+ of 5');
+    });
+
+    it('creates a transaction to update storage and tries to execute it expecting revert', async () => {
+      const data = storageInstance.interface.encodeFunctionData('setText', ['ilovemusic']);
+
+      txId = await governanceInstance
+        .connect(global.provider)
+        .callStatic.createTransaction(storageInstance.address, 0, data, {
+          // @ts-ignore https://github.com/ethereum-ts/TypeChain/pull/258
+          from: governors[0].address,
+        });
+
+      await governanceInstance
+        .connect(governors[0].connect(global.provider))
+        .createTransaction(storageInstance.address, 0, data);
+
+      const t = await governanceInstance.getTransaction(txId);
+      assert.strictEqual(t.votes.toNumber(), 1, 'should get voted by self');
+
+      try {
+        await governanceInstance
+          .connect(governors[0].connect(global.provider))
+          .executeTransaction(txId);
+
+        assert(false, 'less signatures should have thrown error');
+      } catch (error) {
+        const msg = error.error?.message || error.message;
+
+        assert.ok(msg.includes('Gov: Consensus not acheived'), `Invalid error message: ${msg}`);
+      }
     });
   });
