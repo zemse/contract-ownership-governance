@@ -62,10 +62,14 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
     function confirmTransaction(uint256 _transactionId) public override {
         require(_transactionId < transactions.length, "Gov: Tx doesnt exists");
         require(!transactions[_transactionId].executed, "Gov: Tx already executed");
-        require(confirmation[_transactionId][msg.sender], "Gov: Already confirmed");
+        require(!confirmation[_transactionId][msg.sender], "Gov: Already confirmed");
 
         confirmation[_transactionId][msg.sender] = true;
         transactions[_transactionId].votes += 1;
+
+        if (isTransactionConfirmed(_transactionId)) {
+            executeTransaction(_transactionId);
+        }
     }
 
     /// @dev Allows a governor to revoke a confirmation for a transaction.
@@ -73,7 +77,7 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
     function revokeConfirmation(uint256 _transactionId) public override {
         require(_transactionId < transactions.length, "Gov: Tx doesnt exists");
         require(!transactions[_transactionId].executed, "Gov: Tx already executed");
-        require(!confirmation[_transactionId][msg.sender], "Gov: Not confirmed");
+        require(confirmation[_transactionId][msg.sender], "Gov: Not confirmed");
 
         confirmation[_transactionId][msg.sender] = false;
         transactions[_transactionId].votes -= 1;
@@ -82,6 +86,7 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
     /// @notice Calls the governed contract to perform administrative task
     /// @param _transactionId Transaction ID
     function executeTransaction(uint256 _transactionId) public override {
+        require(!transactions[_transactionId].executed, "Gov: Tx already executed");
         require(isTransactionConfirmed(_transactionId), "Gov: Consensus not acheived");
 
         (bool _success, ) = transactions[_transactionId].destination.call{
@@ -89,6 +94,8 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
         }(transactions[_transactionId].data);
 
         require(_success, "Gov: Call was reverted");
+
+        transactions[_transactionId].executed = true;
     }
 
     /// @notice Checks if transaction is confirmed
