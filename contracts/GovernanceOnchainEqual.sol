@@ -10,8 +10,12 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
     /// @dev Transactions proposed for being executed
     Transaction[] transactions;
 
+    /// @dev consensus numerator and denominator stored together
+    ///      For 66% consensus, numerator = 2, denominator = 3
+    ///      For 5 fixed votes, numerator = 5, denominator = 0
     uint256[2] consensus;
 
+    /// @dev List of governors
     address[] governors;
 
     /// @dev Transaction confirmation given by individual governors
@@ -75,6 +79,8 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
         transactions[_transactionId].votes -= 1;
     }
 
+    /// @notice Calls the governed contract to perform administrative task
+    /// @param _transactionId Transaction ID
     function executeTransaction(uint256 _transactionId) public override {
         require(isTransactionConfirmed(_transactionId), "Gov: Consensus not acheived");
 
@@ -85,10 +91,16 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
         require(_success, "Call was reverted");
     }
 
+    /// @notice Checks if transaction is confirmed
+    /// @param _transactionId Transaction ID
+    /// @return Whether transaction is confirmed or not
     function isTransactionConfirmed(uint256 _transactionId) internal view returns (bool) {
         return transactions[_transactionId].votes >= required();
     }
 
+    /// @notice Gets transaction parameters
+    /// @param _transactionId TransactionID
+    /// @return ABIV2 encoded Transaction struct
     function getTransaction(uint256 _transactionId)
         public
         override
@@ -98,6 +110,9 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
         return transactions[_transactionId];
     }
 
+    /// @notice Gets static or dynamic number votes required for consensus
+    /// @dev Required is dynamic if denominator is non zero (for e.g. 66% consensus)
+    /// @return Required number of consensus votes
     function required() public override view returns (uint256) {
         if (consensus[1] == 0) {
             return consensus[0];
@@ -106,28 +121,49 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
         }
     }
 
+    /// @notice Gets required fraction of votes from all governors for consensus
+    /// @return numerator: Required consensus numberator if denominator is
+    ///         non zero. Exact votes required if denominator is zero
+    /// @return denominator: Required consensus denominator. It is zero if
+    ///         the numerator represents simple number instead of fraction
     function getConsensus() public override view returns (uint256, uint256) {
         return (consensus[0], consensus[1]);
     }
 
+    /// @notice Sets consensus requirement
+    /// @param _numerator Required consensus numberator if denominator is
+    ///         non zero. Exact votes required if denominator is zero
+    /// @param _denominator Required consensus denominator. It is zero if
+    ///         the numerator represents simple number instead of fraction
+    /// @dev For 66% consensus _numerator = 2, _denominator = 3
+    ///      For 5 fixed votes _numerator = 5, _denominator = 0
     function setConsensus(uint256 _numerator, uint256 _denominator) public override {
         consensus[0] = _numerator;
         consensus[1] = _denominator;
     }
 
+    /// @notice Gets list of governors
+    /// @return List of governors
     function getGovernors() public override view returns (address[] memory) {
         return governors;
     }
 
+    /// @notice Adds governor
+    /// @param _newGovernor New governor addresses
     function addGovernor(address _newGovernor) public override {
         require(!isGovernor(_newGovernor), "Already a governor");
         governors.push(_newGovernor);
     }
 
+    /// @notice Gets the count of all governors
+    /// @return Count of all governors
     function governorsCount() public override view returns (uint256) {
         return governors.length;
     }
 
+    /// @notice Gets whether an address is governor or not
+    /// @param _governor Address of governor
+    /// @return governor status
     function isGovernor(address _governor) public override view returns (bool) {
         for (uint256 i = 0; i < governors.length; i++) {
             if (governors[i] == _governor) {
@@ -137,6 +173,8 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
         return false;
     }
 
+    /// @notice Removes governor
+    /// @param _existingGovernor Existing governor addresses
     function removeGovernor(address _existingGovernor) public override {
         uint256 _index;
         bool _exists;
@@ -153,6 +191,9 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
         governors.pop();
     }
 
+    /// @notice Removes governor
+    /// @param _governor Existing governor address
+    /// @param _newGovernor New governor address
     function replaceGovernor(address _governor, address _newGovernor) public override {
         uint256 _index;
         bool _exists;

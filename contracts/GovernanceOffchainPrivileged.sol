@@ -19,11 +19,15 @@ contract Governance is IGovernanceOffchain, IGovernancePrivileged {
     /// @dev Sum of the powers of all governors
     uint256 public override totalPower;
 
+    /// @dev consensus numerator and denominator stored together
+    ///      For 66% consensus, numerator = 2, denominator = 3
+    ///      For 5 fixed votes, numerator = 5, denominator = 0
     uint256[2] consensus;
 
     /// @dev Governor addresses with corresponding powers (vote weightage)
     mapping(address => uint256) powers;
 
+    /// @dev This contract calls self methods if consensus is acheived
     modifier onlyGovernance() {
         require(msg.sender == address(this), "Only Governance");
         _;
@@ -123,6 +127,9 @@ contract Governance is IGovernanceOffchain, IGovernancePrivileged {
         require(_consensus * 3 > totalPower * 2, "Gov: Not 66% consensus");
     }
 
+    /// @notice Gets static or dynamic number votes required for consensus
+    /// @dev Required is dynamic if denominator is non zero (for e.g. 66% consensus)
+    /// @return Required number of consensus votes
     function required() public override view returns (uint256) {
         if (consensus[1] == 0) {
             return consensus[0];
@@ -131,10 +138,22 @@ contract Governance is IGovernanceOffchain, IGovernancePrivileged {
         }
     }
 
+    /// @notice Gets required fraction of votes from all governors for consensus
+    /// @return numerator: Required consensus numberator if denominator is
+    ///         non zero. Exact votes required if denominator is zero
+    /// @return denominator: Required consensus denominator. It is zero if
+    ///         the numerator represents simple number instead of fraction
     function getConsensus() public override view returns (uint256, uint256) {
         return (consensus[0], consensus[1]);
     }
 
+    /// @notice Sets consensus requirement
+    /// @param _numerator Required consensus numberator if denominator is
+    ///         non zero. Exact votes required if denominator is zero
+    /// @param _denominator Required consensus denominator. It is zero if
+    ///         the numerator represents simple number instead of fraction
+    /// @dev For 66% consensus _numerator = 2, _denominator = 3
+    ///      For 5 fixed votes _numerator = 5, _denominator = 0
     function setConsensus(uint256 _numerator, uint256 _denominator) public override onlyGovernance {
         consensus[0] = _numerator;
         consensus[1] = _denominator;
