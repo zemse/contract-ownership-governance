@@ -99,7 +99,11 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
     }
 
     function required() public override view returns (uint256) {
-        return (consensus[0] * governors.length) / consensus[1];
+        if (consensus[1] == 0) {
+            return consensus[0];
+        } else {
+            return (consensus[0] * governors.length) / consensus[1] + 1;
+        }
     }
 
     function getConsensus() public override view returns (uint256, uint256) {
