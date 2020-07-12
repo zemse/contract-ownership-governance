@@ -62,8 +62,8 @@ export const OnchainEqual = () =>
     });
 
     it('creates a set consensus transaction checks for immediate execution', async () => {
-      // setting 66% as consensus
-      const data = governanceInstance.interface.encodeFunctionData('setConsensus', [2, 3]);
+      // setting 50% as consensus
+      const data = governanceInstance.interface.encodeFunctionData('setConsensus', [1, 2]);
 
       txId = await governanceInstance
         .connect(global.provider)
@@ -84,11 +84,11 @@ export const OnchainEqual = () =>
       assert.ok(t.executed, 'should be executed');
 
       const consensus = await governanceInstance.getConsensus();
-      assert.strictEqual(consensus[0].toNumber(), 2, 'numerator should be set 2');
-      assert.strictEqual(consensus[1].toNumber(), 3, 'denominator should be set 3');
+      assert.strictEqual(consensus[0].toNumber(), 1, 'numerator should be set 1');
+      assert.strictEqual(consensus[1].toNumber(), 2, 'denominator should be set 2');
 
       const requiredAfter = await governanceInstance.required();
-      assert.strictEqual(requiredAfter.toNumber(), 4, 'required should be 4 as 66%+ of 5');
+      assert.strictEqual(requiredAfter.toNumber(), 3, 'required should be 3 as 50%+ of 5');
     });
 
     it('creates a transaction to update storage and tries to execute it expecting revert', async () => {
