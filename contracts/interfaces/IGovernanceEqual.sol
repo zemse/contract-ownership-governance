@@ -39,7 +39,14 @@ interface IGovernanceEqual {
     /// @notice Gets static or dynamic number votes required for consensus
     /// @dev Required is dynamic if denominator is non zero (for e.g. 66% consensus)
     /// @return Required number of consensus votes
-    function getRequiredVotes() external view returns (uint256);
+    function required() external view returns (uint256);
+
+    /// @notice Gets required fraction of votes from all governors for consensus
+    /// @return numerator: Required consensus numberator if denominator is
+    ///         non zero. Exact votes required if denominator is zero
+    /// @return denominator: Required consensus denominator. It is zero if
+    ///         the numerator represents simple number instead of fraction
+    function getConsensus() external view returns (uint256, uint256);
 
     /// @notice Sets consensus requirement
     /// @param _numerator Required consensus numberator if denominator is
@@ -48,5 +55,5 @@ interface IGovernanceEqual {
     ///         the numerator represents simple number instead of fraction
     /// @dev For 66% consensus _numerator = 2, _denominator = 3
     ///      For 5 fixed votes _numerator = 5, _denominator = 0
-    function setRequiredVotes(uint256 _numerator, uint256 _denominator) external;
+    function setConsensus(uint256 _numerator, uint256 _denominator) external;
 }

@@ -19,7 +19,7 @@ contract Governance is IGovernanceOffchain, IGovernancePrivileged {
     /// @dev Sum of the powers of all governors
     uint256 public override totalPower;
 
-    uint256[2] public required;
+    uint256[2] consensus;
 
     /// @dev Governor addresses with corresponding powers (vote weightage)
     mapping(address => uint256) powers;
@@ -123,16 +123,16 @@ contract Governance is IGovernanceOffchain, IGovernancePrivileged {
         require(_consensus * 3 > totalPower * 2, "Gov: Not 66% consensus");
     }
 
-    function getRequiredVotes() public override view returns (uint256) {
-        return (required[0] * totalPower) / required[1];
+    function required() public override view returns (uint256) {
+        return (consensus[0] * totalPower) / consensus[1];
     }
 
-    function setRequiredVotes(uint256 _numerator, uint256 _denominator)
-        public
-        override
-        onlyGovernance
-    {
-        required[0] = _numerator;
-        required[1] = _denominator;
+    function getConsensus() public override view returns (uint256, uint256) {
+        return (consensus[0], consensus[1]);
+    }
+
+    function setConsensus(uint256 _numerator, uint256 _denominator) public override onlyGovernance {
+        consensus[0] = _numerator;
+        consensus[1] = _denominator;
     }
 }

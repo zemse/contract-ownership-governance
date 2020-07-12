@@ -10,7 +10,7 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
     /// @dev Transactions proposed for being executed
     Transaction[] transactions;
 
-    uint256[2] public required;
+    uint256[2] consensus;
 
     address[] governors;
 
@@ -86,7 +86,7 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
     }
 
     function isTransactionConfirmed(uint256 _transactionId) internal view returns (bool) {
-        return transactions[_transactionId].votes >= getRequiredVotes();
+        return transactions[_transactionId].votes >= required();
     }
 
     function getTransaction(uint256 _transactionId)
@@ -98,13 +98,17 @@ contract Governance is IGovernanceOnchain, IGovernanceEqual {
         return transactions[_transactionId];
     }
 
-    function getRequiredVotes() public override view returns (uint256) {
-        return (required[0] * governors.length) / required[1];
+    function required() public override view returns (uint256) {
+        return (consensus[0] * governors.length) / consensus[1];
     }
 
-    function setRequiredVotes(uint256 _numerator, uint256 _denominator) public override {
-        required[0] = _numerator;
-        required[1] = _denominator;
+    function getConsensus() public override view returns (uint256, uint256) {
+        return (consensus[0], consensus[1]);
+    }
+
+    function setConsensus(uint256 _numerator, uint256 _denominator) public override {
+        consensus[0] = _numerator;
+        consensus[1] = _denominator;
     }
 
     function getGovernors() public override view returns (address[] memory) {
