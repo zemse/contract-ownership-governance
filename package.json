@@ -27,7 +27,7 @@
     "typescript": "^3.9.3"
   },
   "devDependencies": {
-    "@typechain/ethers-v5": "0.0.1",
+    "@typechain/ethers-v5": "0.0.2",
     "prettier": "^2.0.5",
     "prettier-plugin-solidity": "^1.0.0-alpha.54",
     "typechain": "^2.0.0"
