@@ -63,6 +63,27 @@ export const OffchainPrivileged = () =>
       );
     });
 
+    it('sets required consensus', async () => {
+      const data = governanceInstance.interface.encodeFunctionData('setConsensus', [2, 3]);
+      const nonce = await governanceInstance.transactionsCount();
+      const signatures = await prepareSignatures(nonce, governanceInstance.address, data, {
+        sortSignatures: true,
+      });
+      await governanceInstance.executeTransaction(
+        nonce,
+        governanceInstance.address,
+        data,
+        signatures
+      );
+
+      const consensus = await governanceInstance.getConsensus();
+      assert.strictEqual(consensus[0].toNumber(), 2, 'numerator should be set');
+      assert.strictEqual(consensus[1].toNumber(), 3, 'denominator should be set');
+
+      const required = await governanceInstance.required();
+      assert.strictEqual(required.toNumber(), 4, 'required should be 4');
+    });
+
     it('tries to call setText from normal wallet expecting revert', async () => {
       try {
         await storageInstance.setText('hi');
