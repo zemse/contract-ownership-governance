@@ -76,13 +76,11 @@ contract Governance is IGovernanceOffchain, IGovernancePrivileged {
     /// @notice Updates governor statuses
     /// @param _governor List of governor addresses
     /// @param _newPrivilege List of corresponding new powers
-    function updatePower(address _governor, uint256 _newPrivilege)
+    function updateGovernor(address _governor, uint256 _newPrivilege)
         external
         override
         onlyGovernance
     {
-        require(msg.sender == address(this), "Gov: Only self can call");
-
         uint256 _totalPower = totalPower;
 
         if (_newPrivilege != powers[_governor]) {
@@ -95,6 +93,20 @@ contract Governance is IGovernanceOffchain, IGovernancePrivileged {
         totalPower = _totalPower;
 
         emit GovernorPowerUpdated(_governor, _newPrivilege);
+    }
+
+    /// @notice Replaces governor
+    /// @param _governor Existing governor address
+    /// @param _newGovernor New governor address
+    function replaceGovernor(address _governor, address _newGovernor)
+        external
+        override
+        onlyGovernance
+    {
+        require(powers[_newGovernor] == 0, "Gov: Should have no power");
+        powers[_newGovernor] = powers[_governor];
+
+        powers[_governor] = 0;
     }
 
     /// @notice Gets the consensus privilege of the governor
@@ -143,7 +155,7 @@ contract Governance is IGovernanceOffchain, IGovernancePrivileged {
     ///         non zero. Exact votes required if denominator is zero
     /// @return denominator: Required consensus denominator. It is zero if
     ///         the numerator represents simple number instead of fraction
-    function getConsensus() public override view returns (uint256, uint256) {
+    function getConsensus() public view returns (uint256, uint256) {
         return (consensus[0], consensus[1]);
     }
 
@@ -154,7 +166,7 @@ contract Governance is IGovernanceOffchain, IGovernancePrivileged {
     ///         the numerator represents simple number instead of fraction
     /// @dev For 66% consensus _numerator = 2, _denominator = 3
     ///      For 5 fixed votes _numerator = 5, _denominator = 0
-    function setConsensus(uint256 _numerator, uint256 _denominator) public override onlyGovernance {
+    function setConsensus(uint256 _numerator, uint256 _denominator) public onlyGovernance {
         consensus[0] = _numerator;
         consensus[1] = _denominator;
     }
@@ -173,9 +185,8 @@ contract Governance is IGovernanceOffchain, IGovernancePrivileged {
             interfaceID ==
             this.powerOf.selector ^
                 this.totalPower.selector ^
-                this.updatePower.selector ^
                 this.required.selector ^
-                this.getConsensus.selector ^
-                this.setConsensus.selector;
+                this.updateGovernor.selector ^
+                this.replaceGovernor.selector;
     }
 }

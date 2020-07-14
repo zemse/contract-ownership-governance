@@ -45,7 +45,7 @@ export const OffchainPrivileged = () =>
     });
 
     it('checks if contract supports EIP-2767 Privileged Voting Rights Interface', async () => {
-      const supports = await governanceInstance.supportsInterface('0x69c56387');
+      const supports = await governanceInstance.supportsInterface('0x4ca6c101');
       assert.ok(supports, 'should support EIP-2767 Privileged Voting Rights Interface');
     });
 
@@ -234,7 +234,7 @@ export const OffchainPrivileged = () =>
     });
 
     it('removes a governor', async () => {
-      const data = governanceInstance.interface.encodeFunctionData('updatePower', [
+      const data = governanceInstance.interface.encodeFunctionData('updateGovernor', [
         governorsPowers[0][0].address,
         0,
       ]);
@@ -275,7 +275,7 @@ export const OffchainPrivileged = () =>
 
     it('adds a governor', async () => {
       const newGovernor = ethers.Wallet.createRandom();
-      const data = governanceInstance.interface.encodeFunctionData('updatePower', [
+      const data = governanceInstance.interface.encodeFunctionData('updateGovernor', [
         newGovernor.address,
         1,
       ]);

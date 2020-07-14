@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.6.10;
-
 /// @title ERC-2767 Governance with Privileged Voting Rights
 /// @dev ERC-165 InterfaceID: 0x69c56387
 interface IGovernancePrivileged {
@@ -17,29 +16,17 @@ interface IGovernancePrivileged {
     /// @return Sum of the power of all governors
     function totalPower() external view returns (uint256);
 
-    /// @notice Updates governor statuses
-    /// @param _governor Governor address
-    /// @param _newPower New power for the governor
-    function updatePower(address _governor, uint256 _newPower) external;
-
-    /// @notice Gets static or dynamic number votes required for consensus
-    /// @dev Required is dynamic if denominator is non zero (for e.g. 66% consensus)
+    /// @notice Gets number votes required for acheiving consensus
     /// @return Required number of consensus votes
     function required() external view returns (uint256);
 
-    /// @notice Gets required fraction of votes from all governors for consensus
-    /// @return numerator: Required consensus numberator if denominator is
-    ///         non zero. Exact votes required if denominator is zero
-    /// @return denominator: Required consensus denominator. It is zero if
-    ///         the numerator represents simple number instead of fraction
-    function getConsensus() external view returns (uint256, uint256);
+    /// @notice Updates governor statuses
+    /// @param _governor Governor address
+    /// @param _newPower New power for the governor
+    function updateGovernor(address _governor, uint256 _newPower) external;
 
-    /// @notice Sets consensus requirement
-    /// @param _numerator Required consensus numberator if denominator is
-    ///         non zero. Exact votes required if denominator is zero
-    /// @param _denominator Required consensus denominator. It is zero if
-    ///         the numerator represents simple number instead of fraction
-    /// @dev For 66% consensus _numerator = 2, _denominator = 3
-    ///      For 5 fixed votes _numerator = 5, _denominator = 0
-    function setConsensus(uint256 _numerator, uint256 _denominator) external;
+    /// @notice Replaces governor
+    /// @param _governor Existing governor address
+    /// @param _newGovernor New governor address
+    function replaceGovernor(address _governor, address _newGovernor) external;
 }
